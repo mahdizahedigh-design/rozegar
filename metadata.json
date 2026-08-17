@@ -1,0 +1,7 @@
+{
+  "name": "تقویم شاهنشاهی",
+  "description": "تقویم کامل شاهنشاهی و میلادی با مناسبت‌های باستانی و مدیریت یادآورها و کارها",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
