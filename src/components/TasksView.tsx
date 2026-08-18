@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -38,6 +38,195 @@ interface TasksViewProps {
 }
 
 type QuickFilterType = 'all' | 'gold' | 'silver' | 'bronze' | 'pending' | 'completed';
+
+type PriorityStyle = {
+  borderClass: string;
+  badgeClass: string;
+  dotColor: string;
+  label: string;
+};
+
+interface ReminderItemProps {
+  reminder: Reminder;
+  pStyle: PriorityStyle;
+  isDark: boolean;
+  isTurquoise: boolean;
+  onToggleReminder: (id: string) => void;
+  onStartEdit: (reminder: Reminder) => void;
+  onDeleteReminder: (id: string) => void;
+}
+
+// Extracted & memoized so that typing in the search box, opening modals,
+// or any other TasksView state change doesn't force every reminder row
+// in the list to re-render — only the row whose own props actually changed.
+const ReminderItem: React.FC<ReminderItemProps> = memo(function ReminderItem({
+  reminder,
+  pStyle,
+  isDark,
+  isTurquoise,
+  onToggleReminder,
+  onStartEdit,
+  onDeleteReminder,
+}) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, x: -20, scale: 0.96 }}
+      transition={{ duration: 0.22, ease: 'easeOut' }}
+      className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 group relative overflow-hidden ${
+        reminder.done
+          ? isDark
+            ? 'bg-white/[0.02] border-white/5 opacity-60'
+            : isTurquoise
+            ? 'bg-sky-50/40 border-sky-100 opacity-60'
+            : 'bg-stone-100/60 border-stone-200 opacity-60'
+          : pStyle.borderClass
+      }`}
+    >
+      {/* Right Accent Stripe based on priority */}
+      <div
+        className={`absolute right-0 top-0 bottom-0 w-1.5 ${
+          reminder.done
+            ? 'bg-stone-500/30'
+            : reminder.priority === 'gold' || reminder.important
+            ? 'bg-gradient-to-b from-amber-400 to-yellow-500'
+            : reminder.priority === 'bronze'
+            ? 'bg-[#cd7f32]'
+            : isTurquoise
+            ? 'bg-sky-400'
+            : 'bg-slate-400'
+        }`}
+      />
+
+      <div className="flex items-center gap-3 flex-1 min-w-0 pr-1">
+        {/* Checkbox */}
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={() => onToggleReminder(reminder.id)}
+          className={`transition cursor-pointer shrink-0 p-1 min-w-[36px] min-h-[36px] flex items-center justify-center ${
+            isTurquoise ? 'text-slate-400 hover:text-sky-600' : 'text-stone-400 hover:text-[#f27d26]'
+          }`}
+          aria-label={reminder.done ? 'علامت‌گذاری به عنوان انجام‌نشده' : 'علامت‌گذاری به عنوان انجام‌شده'}
+        >
+          {reminder.done ? (
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
+          ) : (
+            <Circle className="w-5 h-5" />
+          )}
+        </motion.button>
+
+        {/* Title & metadata */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`text-xs sm:text-sm font-bold transition-all ${
+                reminder.done
+                  ? 'line-through text-stone-500'
+                  : isDark
+                  ? 'text-stone-100'
+                  : isTurquoise
+                  ? 'text-slate-800'
+                  : 'text-stone-900'
+              }`}
+            >
+              {reminder.title}
+            </span>
+
+            {/* Priority Badge */}
+            <span
+              className={`text-[11px] px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1 ${pStyle.badgeClass}`}
+              title={`اولویت: ${pStyle.label}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${pStyle.dotColor}`} />
+              <span>{pStyle.label}</span>
+            </span>
+
+            {/* Recurrence Badge */}
+            {reminder.recur && reminder.recur !== 'none' && (
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-md border font-medium flex items-center gap-1 ${
+                  isDark
+                    ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+                    : 'bg-sky-50 text-sky-700 border-sky-200'
+                }`}
+              >
+                <RotateCw className="w-2.5 h-2.5" />
+                <span>
+                  {reminder.recur === 'daily' ? 'تکرار روزانه' : 'تکرار ماهانه'}
+                </span>
+              </span>
+            )}
+
+            {/* Folder Badge */}
+            {reminder.folder && (
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                  isDark
+                    ? 'bg-white/10 text-stone-300'
+                    : isTurquoise
+                    ? 'bg-sky-100 text-sky-800'
+                    : 'bg-stone-100 text-stone-700'
+                }`}
+              >
+                📁 {reminder.folder}
+              </span>
+            )}
+          </div>
+
+          {reminder.time && (
+            <div
+              className={`text-[11px] flex items-center gap-1 mt-1 ${
+                isDark ? 'text-stone-400' : 'text-stone-500'
+              }`}
+            >
+              <Clock className="w-3 h-3" />
+              <span>ساعت {reminder.time}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action buttons (Edit & Delete) */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Edit Button */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onStartEdit(reminder)}
+          className={`p-2 rounded-xl border transition cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center ${
+            isDark
+              ? 'border-white/5 hover:border-white/20 text-stone-400 hover:text-white hover:bg-white/5'
+              : isTurquoise
+              ? 'border-sky-100 hover:border-sky-300 text-slate-600 hover:text-sky-700 hover:bg-sky-50'
+              : 'border-stone-200 hover:border-stone-300 text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+          }`}
+          title="ویرایش کار"
+          aria-label="ویرایش کار"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </motion.button>
+
+        {/* Delete Action */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onDeleteReminder(reminder.id)}
+          className={`p-2 rounded-xl border transition cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center ${
+            isDark
+              ? 'border-transparent hover:border-rose-500/30 text-stone-400 hover:text-rose-400 hover:bg-rose-500/10'
+              : 'border-transparent hover:border-rose-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50'
+          }`}
+          title="حذف کار"
+          aria-label="حذف کار"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+});
 
 export const TasksView: React.FC<TasksViewProps> = ({
   selectedDate,
@@ -82,65 +271,80 @@ export const TasksView: React.FC<TasksViewProps> = ({
   const weekdayName = WEEKDAYS_FA[weekdayIndex];
   const dateLabel = `${weekdayName}، ${toFa(selectedDate.jd)} ${MONTH_NAMES_FA[selectedDate.jm - 1]} ${toFa(selectedDate.jy)}`;
 
-  // Base list according to tab & folder
-  const baseTabReminders = reminders.filter((r) => {
-    // Tab filter
-    if (taskTab === 'daily') {
-      if (r.dateType !== 'daily' && r.dateType !== ('specific' as any)) return false;
-      if (r.recur === 'daily') return true;
-      if (r.recur === 'monthly') return r.jd === selectedDate.jd;
-      if (r.recur === 'none' || !r.recur) {
-        return r.jy === selectedDate.jy && r.jm === selectedDate.jm && r.jd === selectedDate.jd;
-      }
-      return false;
-    } else if (taskTab === 'general') {
-      return r.dateType === 'general';
-    }
-    return false;
-  }).filter((r) => {
-    // Folder filter
-    if (activeFolder === null) return true;
-    return r.folder === activeFolder;
-  });
+  // Base list according to tab & folder.
+  // Memoized so this filtering pass only reruns when one of its actual
+  // inputs changes, instead of on every TasksView re-render (typing in
+  // search, opening a modal, toggling a switch, etc).
+  const baseTabReminders = useMemo(
+    () =>
+      reminders
+        .filter((r) => {
+          // Tab filter
+          if (taskTab === 'daily') {
+            if (r.dateType !== 'daily' && r.dateType !== ('specific' as any)) return false;
+            if (r.recur === 'daily') return true;
+            if (r.recur === 'monthly') return r.jd === selectedDate.jd;
+            if (r.recur === 'none' || !r.recur) {
+              return r.jy === selectedDate.jy && r.jm === selectedDate.jm && r.jd === selectedDate.jd;
+            }
+            return false;
+          } else if (taskTab === 'general') {
+            return r.dateType === 'general';
+          }
+          return false;
+        })
+        .filter((r) => {
+          // Folder filter
+          if (activeFolder === null) return true;
+          return r.folder === activeFolder;
+        }),
+    [reminders, taskTab, selectedDate.jy, selectedDate.jm, selectedDate.jd, activeFolder]
+  );
 
   // Calculate live counts for quick filters
-  const countAll = baseTabReminders.length;
-  const countGold = baseTabReminders.filter((r) => r.priority === 'gold' || r.important).length;
-  const countSilver = baseTabReminders.filter((r) => (r.priority === 'silver' || (!r.priority && !r.important))).length;
-  const countBronze = baseTabReminders.filter((r) => r.priority === 'bronze').length;
-  const countPending = baseTabReminders.filter((r) => !r.done).length;
-  const countCompleted = baseTabReminders.filter((r) => r.done).length;
+  const { countAll, countGold, countSilver, countBronze, countPending, countCompleted } = useMemo(
+    () => ({
+      countAll: baseTabReminders.length,
+      countGold: baseTabReminders.filter((r) => r.priority === 'gold' || r.important).length,
+      countSilver: baseTabReminders.filter((r) => r.priority === 'silver' || (!r.priority && !r.important)).length,
+      countBronze: baseTabReminders.filter((r) => r.priority === 'bronze').length,
+      countPending: baseTabReminders.filter((r) => !r.done).length,
+      countCompleted: baseTabReminders.filter((r) => r.done).length,
+    }),
+    [baseTabReminders]
+  );
 
   // Filter & Sort reminders
-  const filteredReminders = baseTabReminders
-    .filter((r) => {
-      // Quick filter
-      if (quickFilter === 'gold') return r.priority === 'gold' || r.important;
-      if (quickFilter === 'silver') return r.priority === 'silver' || (!r.priority && !r.important);
-      if (quickFilter === 'bronze') return r.priority === 'bronze';
-      if (quickFilter === 'pending') return !r.done;
-      if (quickFilter === 'completed') return r.done;
-      return true; // 'all'
-    })
-    .filter((r) => {
-      // Search query filter
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        r.title.toLowerCase().includes(q) ||
-        (r.folder && r.folder.toLowerCase().includes(q))
-      );
-    })
-    .sort((a, b) => {
-      // 1. Incomplete before completed
-      if (a.done !== b.done) return a.done ? 1 : -1;
-      // 2. Priority: Gold (3) > Silver (2) > Bronze (1)
-      const pA = a.priority === 'gold' || a.important ? 3 : a.priority === 'bronze' ? 1 : 2;
-      const pB = b.priority === 'gold' || b.important ? 3 : b.priority === 'bronze' ? 1 : 2;
-      if (pA !== pB) return pB - pA;
-      // 3. Time
-      return (a.time || '99:99').localeCompare(b.time || '99:99');
-    });
+  const filteredReminders = useMemo(
+    () =>
+      baseTabReminders
+        .filter((r) => {
+          // Quick filter
+          if (quickFilter === 'gold') return r.priority === 'gold' || r.important;
+          if (quickFilter === 'silver') return r.priority === 'silver' || (!r.priority && !r.important);
+          if (quickFilter === 'bronze') return r.priority === 'bronze';
+          if (quickFilter === 'pending') return !r.done;
+          if (quickFilter === 'completed') return r.done;
+          return true; // 'all'
+        })
+        .filter((r) => {
+          // Search query filter
+          if (!searchQuery.trim()) return true;
+          const q = searchQuery.toLowerCase();
+          return r.title.toLowerCase().includes(q) || (r.folder && r.folder.toLowerCase().includes(q));
+        })
+        .sort((a, b) => {
+          // 1. Incomplete before completed
+          if (a.done !== b.done) return a.done ? 1 : -1;
+          // 2. Priority: Gold (3) > Silver (2) > Bronze (1)
+          const pA = a.priority === 'gold' || a.important ? 3 : a.priority === 'bronze' ? 1 : 2;
+          const pB = b.priority === 'gold' || b.important ? 3 : b.priority === 'bronze' ? 1 : 2;
+          if (pA !== pB) return pB - pA;
+          // 3. Time
+          return (a.time || '99:99').localeCompare(b.time || '99:99');
+        }),
+    [baseTabReminders, quickFilter, searchQuery]
+  );
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,14 +395,14 @@ export const TasksView: React.FC<TasksViewProps> = ({
     setNewFolder('');
   };
 
-  const handleStartEdit = (reminder: Reminder) => {
+  const handleStartEdit = useCallback((reminder: Reminder) => {
     setEditingTask(reminder);
     setEditTitle(reminder.title);
     setEditTime(reminder.time || '');
     setEditFolder(reminder.folder || '');
     setEditPriority(reminder.priority || (reminder.important ? 'gold' : 'silver'));
     setEditRecur(reminder.recur || 'none');
-  };
+  }, []);
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1048,163 +1252,16 @@ export const TasksView: React.FC<TasksViewProps> = ({
                     const pStyle = getPriorityStyle(reminder.priority, reminder.important);
 
                     return (
-                      <motion.div
-                        layout
-                        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: -20, scale: 0.96 }}
-                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                      <ReminderItem
                         key={reminder.id}
-                        className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 group relative overflow-hidden ${
-                          reminder.done
-                            ? isDark
-                              ? 'bg-white/[0.02] border-white/5 opacity-60'
-                              : isTurquoise
-                              ? 'bg-sky-50/40 border-sky-100 opacity-60'
-                              : 'bg-stone-100/60 border-stone-200 opacity-60'
-                            : pStyle.borderClass
-                        }`}
-                      >
-                        {/* Right Accent Stripe based on priority */}
-                        <div
-                          className={`absolute right-0 top-0 bottom-0 w-1.5 ${
-                            reminder.done
-                              ? 'bg-stone-500/30'
-                              : reminder.priority === 'gold' || reminder.important
-                              ? 'bg-gradient-to-b from-amber-400 to-yellow-500'
-                              : reminder.priority === 'bronze'
-                              ? 'bg-[#cd7f32]'
-                              : isTurquoise
-                              ? 'bg-sky-400'
-                              : 'bg-slate-400'
-                          }`}
-                        />
-
-                        <div className="flex items-center gap-3 flex-1 min-w-0 pr-1">
-                          {/* Checkbox */}
-                          <motion.button
-                            whileTap={{ scale: 0.8 }}
-                            onClick={() => onToggleReminder(reminder.id)}
-                            className={`transition cursor-pointer shrink-0 p-1 min-w-[36px] min-h-[36px] flex items-center justify-center ${
-                              isTurquoise ? 'text-slate-400 hover:text-sky-600' : 'text-stone-400 hover:text-[#f27d26]'
-                            }`}
-                            aria-label={reminder.done ? 'علامت‌گذاری به عنوان انجام‌نشده' : 'علامت‌گذاری به عنوان انجام‌شده'}
-                          >
-                            {reminder.done ? (
-                              <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
-                            ) : (
-                              <Circle className="w-5 h-5" />
-                            )}
-                          </motion.button>
-
-                          {/* Title & metadata */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className={`text-xs sm:text-sm font-bold transition-all ${
-                                  reminder.done
-                                    ? 'line-through text-stone-500'
-                                    : isDark
-                                    ? 'text-stone-100'
-                                    : isTurquoise
-                                    ? 'text-slate-800'
-                                    : 'text-stone-900'
-                                }`}
-                              >
-                                {reminder.title}
-                              </span>
-
-                              {/* Priority Badge */}
-                              <span
-                                className={`text-[11px] px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1 ${pStyle.badgeClass}`}
-                                title={`اولویت: ${pStyle.label}`}
-                              >
-                                <span className={`w-1.5 h-1.5 rounded-full ${pStyle.dotColor}`} />
-                                <span>{pStyle.label}</span>
-                              </span>
-
-                              {/* Recurrence Badge */}
-                              {reminder.recur && reminder.recur !== 'none' && (
-                                <span
-                                  className={`text-[10px] px-1.5 py-0.5 rounded-md border font-medium flex items-center gap-1 ${
-                                    isDark
-                                      ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
-                                      : 'bg-sky-50 text-sky-700 border-sky-200'
-                                  }`}
-                                >
-                                  <RotateCw className="w-2.5 h-2.5" />
-                                  <span>
-                                    {reminder.recur === 'daily' ? 'تکرار روزانه' : 'تکرار ماهانه'}
-                                  </span>
-                                </span>
-                              )}
-
-                              {/* Folder Badge */}
-                              {reminder.folder && (
-                                <span
-                                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
-                                    isDark
-                                      ? 'bg-white/10 text-stone-300'
-                                      : isTurquoise
-                                      ? 'bg-sky-100 text-sky-800'
-                                      : 'bg-stone-100 text-stone-700'
-                                  }`}
-                                >
-                                  📁 {reminder.folder}
-                                </span>
-                              )}
-                            </div>
-
-                            {reminder.time && (
-                              <div
-                                className={`text-[11px] flex items-center gap-1 mt-1 ${
-                                  isDark ? 'text-stone-400' : 'text-stone-500'
-                                }`}
-                              >
-                                <Clock className="w-3 h-3" />
-                                <span>ساعت {reminder.time}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Action buttons (Edit & Delete) */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Edit Button */}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleStartEdit(reminder)}
-                            className={`p-2 rounded-xl border transition cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center ${
-                              isDark
-                                ? 'border-white/5 hover:border-white/20 text-stone-400 hover:text-white hover:bg-white/5'
-                                : isTurquoise
-                                ? 'border-sky-100 hover:border-sky-300 text-slate-600 hover:text-sky-700 hover:bg-sky-50'
-                                : 'border-stone-200 hover:border-stone-300 text-stone-500 hover:text-stone-900 hover:bg-stone-100'
-                            }`}
-                            title="ویرایش کار"
-                            aria-label="ویرایش کار"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </motion.button>
-
-                          {/* Delete Action */}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => onDeleteReminder(reminder.id)}
-                            className={`p-2 rounded-xl border transition cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center ${
-                              isDark
-                                ? 'border-transparent hover:border-rose-500/30 text-stone-400 hover:text-rose-400 hover:bg-rose-500/10'
-                                : 'border-transparent hover:border-rose-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50'
-                            }`}
-                            title="حذف کار"
-                            aria-label="حذف کار"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </motion.button>
-                        </div>
-                      </motion.div>
+                        reminder={reminder}
+                        pStyle={pStyle}
+                        isDark={isDark}
+                        isTurquoise={isTurquoise}
+                        onToggleReminder={onToggleReminder}
+                        onStartEdit={handleStartEdit}
+                        onDeleteReminder={onDeleteReminder}
+                      />
                     );
                   })
                 ) : (

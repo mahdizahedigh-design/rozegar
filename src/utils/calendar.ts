@@ -5,9 +5,9 @@ export const SHAHANSHAHI_OFFSET = 1180; // Standard offset from Solar Hijri (140
 export const MONTH_NAMES_FA = [
   'فروردین',
   'اردیبهشت',
-  'خرداد',
+  'خورداد',
   'تیر',
-  'مرداد',
+  'امرداد',
   'شهریور',
   'مهر',
   'آبان',

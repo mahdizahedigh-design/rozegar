@@ -88,6 +88,7 @@ const DayCell = memo(function DayCell({
     <button
       type="button"
       onClick={() => onSelect({ jy: currentJy, jm: currentJm, jd: dayNum })}
+      style={{ transform: 'translate3d(0,0,0)', willChange: 'transform' }}
       className={`relative group aspect-square flex flex-col items-center justify-center p-1 cursor-pointer select-none rounded-2xl transition-all duration-150 transform active:scale-95 ${
         isSelected
           ? isTurquoise

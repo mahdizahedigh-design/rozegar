@@ -122,6 +122,82 @@
   color: #1c1917;
 }
 
+/* GPU acceleration hints for glass surfaces: promotes them to their own
+   compositor layer so blur/opacity/transform animations run on the GPU
+   instead of being repainted by the CPU on every frame. */
+.glass-panel,
+.glass-card,
+.glass-input {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
+/* Mobile performance mode: backdrop-filter blur is one of the most
+   expensive CSS effects on mobile GPUs, especially when several
+   glass-panel/glass-card elements are stacked or animating at once
+   (e.g. calendar grid + modals). Cut blur radius and saturation
+   sharply on small/touch screens while keeping the same visual
+   language (tint + border + shadow), so frame rate stays smooth
+   without disabling the glass look entirely. */
+@media (max-width: 768px) {
+  .dark .glass-panel,
+  .dark .glass-card {
+    backdrop-filter: blur(6px) saturate(120%);
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
+  }
+  .dark .glass-input {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .turquoise .glass-panel,
+  .turquoise .glass-card {
+    backdrop-filter: blur(6px) saturate(110%);
+    -webkit-backdrop-filter: blur(6px) saturate(110%);
+  }
+  .turquoise .glass-input {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .light .glass-panel,
+  .light .glass-card {
+    backdrop-filter: blur(6px) saturate(110%);
+    -webkit-backdrop-filter: blur(6px) saturate(110%);
+  }
+  .light .glass-input {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Calendar grid & other per-cell blur utilities: with 30-42 day cells
+     each running their own backdrop-blur-md/xl simultaneously, this is
+     the single heaviest compositing cost in the app on Android WebViews.
+     Force it down to a light blur on mobile regardless of which Tailwind
+     utility class produced it. */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl {
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+  }
+}
+
+/* Respect the OS-level "reduce motion" setting: turn off decorative
+   animations/transitions entirely for users who opted out, and drop
+   backdrop blur too since it is often paired with motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
