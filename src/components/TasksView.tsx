@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -249,6 +249,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
   // Date Picker Modal State
   const [isDatePickerModalOpen, setIsDatePickerModalOpen] = useState(false);
+  // When set, overrides `selectedDate` as the target date for the next daily task
+  const [overrideDate, setOverrideDate] = useState<ShahDate | null>(null);
 
   // New task form state
   const [newTitle, setNewTitle] = useState('');
@@ -265,6 +267,11 @@ export const TasksView: React.FC<TasksViewProps> = ({
   const [editFolder, setEditFolder] = useState('');
   const [editPriority, setEditPriority] = useState<TaskPriority>('silver');
   const [editRecur, setEditRecur] = useState<RecurrenceType>('none');
+
+  // Reset the manual date override whenever the user navigates to a different day
+  useEffect(() => {
+    setOverrideDate(null);
+  }, [selectedDate.jy, selectedDate.jm, selectedDate.jd]);
 
   // Selected date info
   const weekdayIndex = weekdayOfShahDate(selectedDate.jy, selectedDate.jm, selectedDate.jd);
@@ -351,7 +358,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
     if (!newTitle.trim()) return;
 
     if (taskTab === 'daily') {
-      const dateKey = `${selectedDate.jy}-${String(selectedDate.jm).padStart(2, '0')}-${String(selectedDate.jd).padStart(2, '0')}`;
+      const targetDate = overrideDate || selectedDate;
+      const dateKey = `${targetDate.jy}-${String(targetDate.jm).padStart(2, '0')}-${String(targetDate.jd).padStart(2, '0')}`;
       onAddReminder({
         title: newTitle.trim(),
         time: newTime.trim() || undefined,
@@ -362,9 +370,9 @@ export const TasksView: React.FC<TasksViewProps> = ({
         done: false,
         dateType: 'daily',
         dateKey,
-        jy: selectedDate.jy,
-        jm: selectedDate.jm,
-        jd: selectedDate.jd,
+        jy: targetDate.jy,
+        jm: targetDate.jm,
+        jd: targetDate.jd,
       });
     } else {
       onAddReminder({
@@ -386,13 +394,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
     setNewTitle('');
     setNewTime('');
     setNewFolder('');
-  };
-
-  const handleModalConfirm = (taskData: Omit<Reminder, 'id' | 'createdAt'>) => {
-    onAddReminder(taskData);
-    setNewTitle('');
-    setNewTime('');
-    setNewFolder('');
+    setOverrideDate(null);
   };
 
   const handleStartEdit = useCallback((reminder: Reminder) => {
@@ -486,12 +488,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
       <TaskDatePickerModal
         isOpen={isDatePickerModalOpen}
         onClose={() => setIsDatePickerModalOpen(false)}
-        onConfirm={handleModalConfirm}
-        initialDate={selectedDate}
-        initialTitle={newTitle}
-        initialTime={newTime}
-        initialPriority={newPriority}
-        folders={folders}
+        onConfirm={(date) => setOverrideDate(date)}
+        initialDate={overrideDate || selectedDate}
         theme={theme}
       />
 
@@ -1227,18 +1225,45 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
                   {/* Direct Popup Open Button for Date Picker */}
                   {taskTab === 'daily' && (
-                    <button
-                      type="button"
-                      onClick={() => setIsDatePickerModalOpen(true)}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border transition cursor-pointer min-h-[32px] ${
-                        isTurquoise
-                          ? 'border-sky-300 text-sky-700 hover:bg-sky-50'
-                          : 'border-[#f27d26]/40 text-[#f27d26] hover:bg-[#f27d26]/10'
-                      }`}
-                    >
-                      <Calendar className="w-3 h-3" />
-                      <span>تغییر سال/ماه/روز</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsDatePickerModalOpen(true)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border transition cursor-pointer min-h-[32px] ${
+                          overrideDate
+                            ? isTurquoise
+                              ? 'border-sky-500 bg-sky-500/10 text-sky-700'
+                              : 'border-[#f27d26] bg-[#f27d26]/10 text-[#f27d26]'
+                            : isTurquoise
+                            ? 'border-sky-300 text-sky-700 hover:bg-sky-50'
+                            : 'border-[#f27d26]/40 text-[#f27d26] hover:bg-[#f27d26]/10'
+                        }`}
+                      >
+                        <Calendar className="w-3 h-3" />
+                        <span>
+                          {overrideDate
+                            ? `${toFa(overrideDate.jd)} ${MONTH_NAMES_FA[overrideDate.jm - 1]} ${toFa(overrideDate.jy)}`
+                            : 'تغییر سال/ماه/روز'}
+                        </span>
+                      </button>
+
+                      {overrideDate && (
+                        <button
+                          type="button"
+                          onClick={() => setOverrideDate(null)}
+                          title="بازگشت به تاریخ انتخاب‌شده در تقویم"
+                          className={`p-1.5 rounded-lg border transition cursor-pointer min-h-[32px] ${
+                            isDark
+                              ? 'border-white/10 text-stone-400 hover:bg-white/5'
+                              : isTurquoise
+                              ? 'border-sky-200 text-slate-500 hover:bg-sky-50'
+                              : 'border-stone-200 text-stone-500 hover:bg-stone-100'
+                          }`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
