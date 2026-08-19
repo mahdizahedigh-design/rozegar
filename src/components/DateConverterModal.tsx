@@ -9,6 +9,8 @@ import {
   toShahanshahi,
   isValidShahDate,
   isValidGregDate,
+  solarToShah,
+  shahToSolar,
 } from '../utils/calendar';
 import { ShahDate, ThemeMode } from '../types';
 
@@ -26,6 +28,13 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
   theme = 'dark',
 }) => {
   const isDark = theme === 'dark';
+  const isTurquoise = theme === 'turquoise';
+  const accentText = isTurquoise ? 'text-sky-600' : 'text-[#f27d26]';
+  const accentTextSoft = isTurquoise ? 'text-sky-700' : isDark ? 'text-orange-300' : 'text-stone-900';
+  const accentBtn = isTurquoise
+    ? 'bg-sky-500 hover:bg-sky-600 text-white shadow-sky-500/20'
+    : 'bg-[#f27d26] hover:bg-[#ff8a38] text-stone-950 shadow-[#f27d26]/20';
+  const accentFocus = isTurquoise ? 'focus:border-sky-500' : 'focus:border-[#f27d26]';
 
   // Shahanshahi to Gregorian state
   const [sY, setSY] = useState(initialShahDate.jy.toString());
@@ -39,6 +48,12 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
   const [gM, setGM] = useState((now.getMonth() + 1).toString());
   const [gD, setGD] = useState(now.getDate().toString());
   const [gToSResult, setGToSResult] = useState<string | null>(null);
+
+  // Solar Hijri (Shamsi) to Shahanshahi state
+  const [jY, setJY] = useState(String(shahToSolar(initialShahDate.jy)));
+  const [jM, setJM] = useState(initialShahDate.jm.toString());
+  const [jD, setJD] = useState(initialShahDate.jd.toString());
+  const [jToSResult, setJToSResult] = useState<string | null>(null);
 
   const handleConvertShahToGreg = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +89,26 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
     );
   };
 
+  const handleConvertSolarToShah = (e: React.FormEvent) => {
+    e.preventDefault();
+    const y = parseInt(jY, 10);
+    const m = parseInt(jM, 10);
+    const d = parseInt(jD, 10);
+
+    // Shahanshahi calendar shares the exact same month/day structure as
+    // the Solar Hijri (Jalali) calendar — only the year epoch differs.
+    const shahY = solarToShah(y);
+
+    if (!isValidShahDate(shahY, m, d)) {
+      setJToSResult('تاریخ شمسی وارد شده نامعتبر است.');
+      return;
+    }
+
+    setJToSResult(
+      `معادل شاهنشاهی: ${toFa(d)} ${MONTH_NAMES_FA[m - 1]} ${toFa(shahY)} شاهنشاهی`
+    );
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -96,18 +131,20 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
             className={`relative z-10 w-full max-w-lg max-h-[88vh] overflow-y-auto p-5 sm:p-6 rounded-3xl border shadow-2xl flex flex-col gap-4 overscroll-contain my-auto ${
               isDark
                 ? 'bg-[#141416] border-white/10 text-stone-100'
+                : isTurquoise
+                ? 'bg-white text-slate-800 border-sky-200 shadow-sky-950/10'
                 : 'bg-white border-stone-200 text-stone-900'
             }`}
           >
             {/* Header */}
             <div
               className={`flex items-center justify-between pb-3 border-b sticky top-0 bg-inherit z-10 ${
-                isDark ? 'border-white/10' : 'border-stone-200'
+                isDark ? 'border-white/10' : isTurquoise ? 'border-sky-100' : 'border-stone-200'
               }`}
             >
-              <div className="flex items-center gap-2 text-[#f27d26] font-bold text-base">
+              <div className={`flex items-center gap-2 font-bold text-base ${accentText}`}>
                 <ArrowLeftRight className="w-5 h-5" />
-                <h3>مبدل تقویم شاهنشاهی ⇄ میلادی</h3>
+                <h3>مبدل تقویم شاهنشاهی ⇄ میلادی ⇄ شمسی</h3>
               </div>
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
@@ -116,6 +153,8 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                 className={`p-1.5 rounded-xl cursor-pointer transition ${
                   isDark
                     ? 'text-stone-400 hover:text-white hover:bg-white/10'
+                    : isTurquoise
+                    ? 'text-slate-500 hover:text-slate-900 hover:bg-sky-50'
                     : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
                 }`}
               >
@@ -126,16 +165,18 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
             {/* Form 1: Shahanshahi to Gregorian */}
             <div
               className={`p-4 rounded-2xl border space-y-3 ${
-                isDark ? 'bg-white/[0.03] border-white/5' : 'bg-stone-50 border-stone-200'
+                isDark
+                  ? 'bg-white/[0.03] border-white/5'
+                  : isTurquoise
+                  ? 'bg-sky-50/50 border-sky-100'
+                  : 'bg-stone-50 border-stone-200'
               }`}
             >
-              <h4 className={`text-xs font-bold ${isDark ? 'text-orange-300' : 'text-stone-900'}`}>
-                ۱. تبدیل از شاهنشاهی به میلادی
-              </h4>
+              <h4 className={`text-xs font-bold ${accentTextSoft}`}>۱. تبدیل از شاهنشاهی به میلادی</h4>
               <form onSubmit={handleConvertShahToGreg} className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
                       روز
                     </label>
                     <input
@@ -144,21 +185,29 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                       max="31"
                       value={sD}
                       onChange={(e) => setSD(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none focus:border-[#f27d26] ${
-                        isDark ? 'bg-[#1f1f23] border-white/10 text-white' : 'bg-white border-stone-300 text-stone-900'
+                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
                       }`}
                       required
                     />
                   </div>
                   <div>
-                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
                       ماه
                     </label>
                     <select
                       value={sM}
                       onChange={(e) => setSM(e.target.value)}
-                      className={`w-full px-2 py-2 rounded-xl border text-xs outline-none focus:border-[#f27d26] ${
-                        isDark ? 'bg-[#1f1f23] border-white/10 text-white' : 'bg-white border-stone-300 text-stone-900'
+                      className={`w-full px-2 py-2 rounded-xl border text-xs outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
                       }`}
                     >
                       {MONTH_NAMES_FA.map((name, i) => (
@@ -169,15 +218,19 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
                       سال شاهنشاهی
                     </label>
                     <input
                       type="number"
                       value={sY}
                       onChange={(e) => setSY(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none focus:border-[#f27d26] ${
-                        isDark ? 'bg-[#1f1f23] border-white/10 text-white' : 'bg-white border-stone-300 text-stone-900'
+                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
                       }`}
                       required
                     />
@@ -188,7 +241,7 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
                   type="submit"
-                  className="w-full py-2 rounded-xl bg-[#f27d26] hover:bg-[#ff8a38] text-stone-950 font-bold text-xs transition cursor-pointer shadow-md shadow-[#f27d26]/20"
+                  className={`w-full py-2 rounded-xl font-bold text-xs transition cursor-pointer shadow-md ${accentBtn}`}
                 >
                   محاسبه تاریخ میلادی
                 </motion.button>
@@ -199,6 +252,8 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                     className={`p-2.5 rounded-xl border text-xs font-semibold text-center ${
                       isDark
                         ? 'bg-[#f27d26]/10 border-[#f27d26]/30 text-orange-300'
+                        : isTurquoise
+                        ? 'bg-sky-50 border-sky-200 text-sky-700'
                         : 'bg-orange-50 border-orange-200 text-[#c75a10]'
                     }`}
                   >
@@ -211,17 +266,19 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
             {/* Form 2: Gregorian to Shahanshahi */}
             <div
               className={`p-4 rounded-2xl border space-y-3 ${
-                isDark ? 'bg-white/[0.03] border-white/5' : 'bg-stone-50 border-stone-200'
+                isDark
+                  ? 'bg-white/[0.03] border-white/5'
+                  : isTurquoise
+                  ? 'bg-sky-50/50 border-sky-100'
+                  : 'bg-stone-50 border-stone-200'
               }`}
             >
-              <h4 className={`text-xs font-bold ${isDark ? 'text-orange-300' : 'text-stone-900'}`}>
-                ۲. تبدیل از میلادی به شاهنشاهی
-              </h4>
+              <h4 className={`text-xs font-bold ${accentTextSoft}`}>۲. تبدیل از میلادی به شاهنشاهی</h4>
               <form onSubmit={handleConvertGregToShah} className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-                      Day (روز)
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                      روز
                     </label>
                     <input
                       type="number"
@@ -229,40 +286,52 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                       max="31"
                       value={gD}
                       onChange={(e) => setGD(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none focus:border-[#f27d26] ${
-                        isDark ? 'bg-[#1f1f23] border-white/10 text-white' : 'bg-white border-stone-300 text-stone-900'
+                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
                       }`}
                       required
                     />
                   </div>
                   <div>
-                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-                      Month (ماه)
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                      ماه
                     </label>
                     <select
                       value={gM}
                       onChange={(e) => setGM(e.target.value)}
-                      className={`w-full px-2 py-2 rounded-xl border text-xs outline-none focus:border-[#f27d26] ${
-                        isDark ? 'bg-[#1f1f23] border-white/10 text-white' : 'bg-white border-stone-300 text-stone-900'
+                      className={`w-full px-2 py-2 rounded-xl border text-xs outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
                       }`}
                     >
                       {GREGORIAN_MONTH_NAMES_FA.map((name, i) => (
                         <option key={i + 1} value={i + 1} className={isDark ? 'bg-[#141416]' : 'bg-white'}>
-                          {name} ({i + 1})
+                          {name}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-                      Year (سال میلادی)
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                      سال میلادی
                     </label>
                     <input
                       type="number"
                       value={gY}
                       onChange={(e) => setGY(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none focus:border-[#f27d26] ${
-                        isDark ? 'bg-[#1f1f23] border-white/10 text-white' : 'bg-white border-stone-300 text-stone-900'
+                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
                       }`}
                       required
                     />
@@ -273,7 +342,7 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
                   type="submit"
-                  className="w-full py-2 rounded-xl bg-[#f27d26] hover:bg-[#ff8a38] text-stone-950 font-bold text-xs transition cursor-pointer shadow-md shadow-[#f27d26]/20"
+                  className={`w-full py-2 rounded-xl font-bold text-xs transition cursor-pointer shadow-md ${accentBtn}`}
                 >
                   محاسبه تاریخ شاهنشاهی
                 </motion.button>
@@ -284,10 +353,113 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
                     className={`p-2.5 rounded-xl border text-xs font-semibold text-center ${
                       isDark
                         ? 'bg-[#f27d26]/10 border-[#f27d26]/30 text-orange-300'
+                        : isTurquoise
+                        ? 'bg-sky-50 border-sky-200 text-sky-700'
                         : 'bg-orange-50 border-orange-200 text-[#c75a10]'
                     }`}
                   >
                     {gToSResult}
+                  </motion.div>
+                )}
+              </form>
+            </div>
+
+            {/* Form 3: Solar Hijri (Shamsi) to Shahanshahi */}
+            <div
+              className={`p-4 rounded-2xl border space-y-3 ${
+                isDark
+                  ? 'bg-white/[0.03] border-white/5'
+                  : isTurquoise
+                  ? 'bg-sky-50/50 border-sky-100'
+                  : 'bg-stone-50 border-stone-200'
+              }`}
+            >
+              <h4 className={`text-xs font-bold ${accentTextSoft}`}>۳. تبدیل از شمسی (خورشیدی) به شاهنشاهی</h4>
+              <form onSubmit={handleConvertSolarToShah} className="space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                      روز
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={jD}
+                      onChange={(e) => setJD(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
+                      }`}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                      ماه
+                    </label>
+                    <select
+                      value={jM}
+                      onChange={(e) => setJM(e.target.value)}
+                      className={`w-full px-2 py-2 rounded-xl border text-xs outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
+                      }`}
+                    >
+                      {MONTH_NAMES_FA.map((name, i) => (
+                        <option key={i + 1} value={i + 1} className={isDark ? 'bg-[#141416]' : 'bg-white'}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-[10px] block mb-1 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                      سال شمسی
+                    </label>
+                    <input
+                      type="number"
+                      value={jY}
+                      onChange={(e) => setJY(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-xl border text-xs text-center outline-none ${accentFocus} ${
+                        isDark
+                          ? 'bg-[#1f1f23] border-white/10 text-white'
+                          : isTurquoise
+                          ? 'bg-sky-50 border-sky-200 text-slate-800'
+                          : 'bg-white border-stone-300 text-stone-900'
+                      }`}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  type="submit"
+                  className={`w-full py-2 rounded-xl font-bold text-xs transition cursor-pointer shadow-md ${accentBtn}`}
+                >
+                  محاسبه تاریخ شاهنشاهی
+                </motion.button>
+                {jToSResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-2.5 rounded-xl border text-xs font-semibold text-center ${
+                      isDark
+                        ? 'bg-[#f27d26]/10 border-[#f27d26]/30 text-orange-300'
+                        : isTurquoise
+                        ? 'bg-sky-50 border-sky-200 text-sky-700'
+                        : 'bg-orange-50 border-orange-200 text-[#c75a10]'
+                    }`}
+                  >
+                    {jToSResult}
                   </motion.div>
                 )}
               </form>

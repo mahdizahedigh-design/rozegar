@@ -20,7 +20,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { Reminder, ShahDate, TaskTabType, RecurrenceType, ThemeMode, TaskPriority } from '../types';
-import { MONTH_NAMES_FA, toFa, WEEKDAYS_FA, weekdayOfShahDate } from '../utils/calendar';
+import { MONTH_NAMES_FA, toFa, WEEKDAYS_FA, weekdayOfShahDate, getTodayShahanshahi, toShahDateKey } from '../utils/calendar';
 import { CustomListsView } from './CustomListsView';
 import { TaskDatePickerModal } from './TaskDatePickerModal';
 
@@ -51,6 +51,7 @@ interface ReminderItemProps {
   pStyle: PriorityStyle;
   isDark: boolean;
   isTurquoise: boolean;
+  isOverdue: boolean;
   onToggleReminder: (id: string) => void;
   onStartEdit: (reminder: Reminder) => void;
   onDeleteReminder: (id: string) => void;
@@ -64,6 +65,7 @@ const ReminderItem: React.FC<ReminderItemProps> = memo(function ReminderItem({
   pStyle,
   isDark,
   isTurquoise,
+  isOverdue,
   onToggleReminder,
   onStartEdit,
   onDeleteReminder,
@@ -82,6 +84,10 @@ const ReminderItem: React.FC<ReminderItemProps> = memo(function ReminderItem({
             : isTurquoise
             ? 'bg-sky-50/40 border-sky-100 opacity-60'
             : 'bg-stone-100/60 border-stone-200 opacity-60'
+          : isOverdue
+          ? isDark
+            ? 'bg-rose-500/10 border-rose-500/40'
+            : 'bg-rose-50 border-rose-300'
           : pStyle.borderClass
       }`}
     >
@@ -90,6 +96,8 @@ const ReminderItem: React.FC<ReminderItemProps> = memo(function ReminderItem({
         className={`absolute right-0 top-0 bottom-0 w-1.5 ${
           reminder.done
             ? 'bg-stone-500/30'
+            : isOverdue
+            ? 'bg-rose-500'
             : reminder.priority === 'gold' || reminder.important
             ? 'bg-gradient-to-b from-amber-400 to-yellow-500'
             : reminder.priority === 'bronze'
@@ -124,6 +132,10 @@ const ReminderItem: React.FC<ReminderItemProps> = memo(function ReminderItem({
               className={`text-xs sm:text-sm font-bold transition-all ${
                 reminder.done
                   ? 'line-through text-stone-500'
+                  : isOverdue
+                  ? isDark
+                    ? 'text-rose-300'
+                    : 'text-rose-700'
                   : isDark
                   ? 'text-stone-100'
                   : isTurquoise
@@ -142,6 +154,21 @@ const ReminderItem: React.FC<ReminderItemProps> = memo(function ReminderItem({
               <span className={`w-1.5 h-1.5 rounded-full ${pStyle.dotColor}`} />
               <span>{pStyle.label}</span>
             </span>
+
+            {/* Overdue Badge */}
+            {isOverdue && !reminder.done && (
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1 ${
+                  isDark
+                    ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                    : 'bg-rose-100 text-rose-700 border-rose-300'
+                }`}
+                title="این یادآور از موعدش گذشته و هنوز انجام نشده"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span>عقب‌افتاده</span>
+              </span>
+            )}
 
             {/* Recurrence Badge */}
             {reminder.recur && reminder.recur !== 'none' && (
@@ -272,6 +299,21 @@ export const TasksView: React.FC<TasksViewProps> = ({
   useEffect(() => {
     setOverrideDate(null);
   }, [selectedDate.jy, selectedDate.jm, selectedDate.jd]);
+
+  // Today's dateKey — used to flag non-recurring daily reminders whose date
+  // has already passed and are still not marked as done ("overdue").
+  const todayKey = useMemo(() => toShahDateKey(getTodayShahanshahi()), []);
+  const isReminderOverdue = useCallback(
+    (reminder: Reminder) => {
+      if (reminder.done) return false;
+      if (reminder.dateType !== 'daily') return false;
+      if (reminder.recur && reminder.recur !== 'none') return false;
+      const key = reminder.dateKey || toShahDateKey({ jy: reminder.jy, jm: reminder.jm, jd: reminder.jd });
+      if (!key) return false;
+      return key < todayKey;
+    },
+    [todayKey]
+  );
 
   // Selected date info
   const weekdayIndex = weekdayOfShahDate(selectedDate.jy, selectedDate.jm, selectedDate.jd);
@@ -1283,6 +1325,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                         pStyle={pStyle}
                         isDark={isDark}
                         isTurquoise={isTurquoise}
+                        isOverdue={isReminderOverdue(reminder)}
                         onToggleReminder={onToggleReminder}
                         onStartEdit={handleStartEdit}
                         onDeleteReminder={onDeleteReminder}
