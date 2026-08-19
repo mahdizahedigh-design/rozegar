@@ -25,6 +25,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   theme = 'dark',
 }) => {
   const isDark = theme === 'dark';
+  const isTurquoise = theme === 'turquoise';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -111,16 +112,18 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             className={`relative z-10 w-full max-w-md max-h-[88vh] overflow-y-auto p-5 sm:p-6 rounded-3xl border shadow-2xl flex flex-col gap-4 overscroll-contain my-auto ${
               isDark
                 ? 'bg-[#141416] border-white/10 text-stone-100'
+                : isTurquoise
+                ? 'bg-white text-slate-800 border-sky-200 shadow-sky-950/10'
                 : 'bg-white border-stone-200 text-stone-900'
             }`}
           >
             {/* Header */}
             <div
               className={`flex items-center justify-between pb-3 border-b sticky top-0 bg-inherit z-10 ${
-                isDark ? 'border-white/10' : 'border-stone-200'
+                isDark ? 'border-white/10' : isTurquoise ? 'border-sky-100' : 'border-stone-200'
               }`}
             >
-              <div className="flex items-center gap-2 text-[#f27d26] font-bold text-base">
+              <div className={`flex items-center gap-2 font-bold text-base ${isTurquoise ? 'text-sky-600' : 'text-[#f27d26]'}`}>
                 <Database className="w-5 h-5" />
                 <h3>پشتیبان‌گیری و تنظیمات داده</h3>
               </div>
@@ -131,6 +134,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 className={`p-1.5 rounded-xl cursor-pointer transition ${
                   isDark
                     ? 'text-stone-400 hover:text-white hover:bg-white/10'
+                    : isTurquoise
+                    ? 'text-slate-500 hover:text-slate-900 hover:bg-sky-50'
                     : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
                 }`}
               >
@@ -140,7 +145,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
             {/* Export / Import Section */}
             <div className="space-y-3">
-              <h4 className={`text-xs font-bold ${isDark ? 'text-stone-300' : 'text-stone-800'}`}>
+              <h4 className={`text-xs font-bold ${isDark ? 'text-stone-300' : isTurquoise ? 'text-slate-700' : 'text-stone-800'}`}>
                 خروجی و درون‌ریزی یادآورها
               </h4>
               <div className="grid grid-cols-2 gap-3">
@@ -151,10 +156,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                   className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition group text-xs font-bold cursor-pointer ${
                     isDark
                       ? 'bg-white/[0.03] hover:bg-[#f27d26]/10 border-white/10 hover:border-[#f27d26]/30 text-orange-300'
+                      : isTurquoise
+                      ? 'bg-sky-50/50 hover:bg-sky-50 border-sky-100 hover:border-sky-300 text-slate-800'
                       : 'bg-stone-50 hover:bg-orange-50 border-stone-200 hover:border-orange-300 text-stone-800'
                   }`}
                 >
-                  <Download className="w-5 h-5 group-hover:scale-110 transition-transform text-[#f27d26]" />
+                  <Download className={`w-5 h-5 group-hover:scale-110 transition-transform ${isTurquoise ? 'text-sky-500' : 'text-[#f27d26]'}`} />
                   <span>دانلود فایل JSON</span>
                 </motion.button>
 
@@ -165,10 +172,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                   className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition group text-xs font-bold cursor-pointer ${
                     isDark
                       ? 'bg-white/[0.03] hover:bg-[#f27d26]/10 border-white/10 hover:border-[#f27d26]/30 text-orange-300'
+                      : isTurquoise
+                      ? 'bg-sky-50/50 hover:bg-sky-50 border-sky-100 hover:border-sky-300 text-slate-800'
                       : 'bg-stone-50 hover:bg-orange-50 border-stone-200 hover:border-orange-300 text-stone-800'
                   }`}
                 >
-                  <Upload className="w-5 h-5 group-hover:scale-110 transition-transform text-[#f27d26]" />
+                  <Upload className={`w-5 h-5 group-hover:scale-110 transition-transform ${isTurquoise ? 'text-sky-500' : 'text-[#f27d26]'}`} />
                   <span>بازیابی از فایل</span>
                 </motion.button>
                 <input
@@ -184,16 +193,16 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             {/* Notifications Toggle */}
             <div
               className={`p-4 rounded-2xl border flex items-center justify-between ${
-                isDark ? 'bg-white/[0.03] border-white/5' : 'bg-stone-50 border-stone-200'
+                isDark ? 'bg-white/[0.03] border-white/5' : isTurquoise ? 'bg-sky-50/50 border-sky-100' : 'bg-stone-50 border-stone-200'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <Bell className="w-4 h-4 text-[#f27d26]" />
+                <Bell className={`w-4 h-4 ${isTurquoise ? 'text-sky-500' : 'text-[#f27d26]'}`} />
                 <div>
-                  <p className={`text-xs font-bold ${isDark ? 'text-stone-200' : 'text-stone-800'}`}>
+                  <p className={`text-xs font-bold ${isDark ? 'text-stone-200' : isTurquoise ? 'text-slate-800' : 'text-stone-800'}`}>
                     اعلان‌های مرورگر
                   </p>
-                  <p className={`text-[10px] ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                  <p className={`text-[10px] ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
                     یادآوری برای کارهای زمان‌دار
                   </p>
                 </div>
@@ -207,6 +216,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                     ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40'
                     : isDark
                     ? 'bg-white/10 text-stone-300 hover:bg-white/20'
+                    : isTurquoise
+                    ? 'bg-sky-100 text-sky-800 hover:bg-sky-200'
                     : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
                 }`}
               >
@@ -219,6 +230,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               className={`flex items-start gap-2 p-3 rounded-2xl border text-[11px] leading-relaxed ${
                 isDark
                   ? 'bg-white/[0.02] border-white/5 text-stone-400'
+                  : isTurquoise
+                  ? 'bg-sky-50/40 border-sky-100 text-slate-600'
                   : 'bg-stone-50 border-stone-200 text-stone-600'
               }`}
             >

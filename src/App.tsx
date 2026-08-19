@@ -249,7 +249,6 @@ export default function App() {
               reminders={reminders}
               onSelectDate={handleSelectDate}
               onChangeMonth={handleChangeMonth}
-              onAddReminder={handleAddReminder}
               onToggleReminder={handleToggleReminder}
             />
           </main>

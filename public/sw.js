@@ -1,5 +1,5 @@
 // Shahanshahi Calendar Service Worker
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `shah-calendar-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `shah-calendar-runtime-${CACHE_VERSION}`;
 

@@ -37,7 +37,7 @@ interface TasksViewProps {
   onDeleteFolder: (name: string) => void;
 }
 
-type QuickFilterType = 'all' | 'gold' | 'silver' | 'bronze' | 'pending' | 'completed';
+type QuickFilterType = 'all' | 'gold' | 'silver' | 'bronze' | 'pending' | 'completed' | 'overdue';
 
 type PriorityStyle = {
   borderClass: string;
@@ -351,7 +351,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
   );
 
   // Calculate live counts for quick filters
-  const { countAll, countGold, countSilver, countBronze, countPending, countCompleted } = useMemo(
+  const { countAll, countGold, countSilver, countBronze, countPending, countCompleted, countOverdue } = useMemo(
     () => ({
       countAll: baseTabReminders.length,
       countGold: baseTabReminders.filter((r) => r.priority === 'gold' || r.important).length,
@@ -359,8 +359,9 @@ export const TasksView: React.FC<TasksViewProps> = ({
       countBronze: baseTabReminders.filter((r) => r.priority === 'bronze').length,
       countPending: baseTabReminders.filter((r) => !r.done).length,
       countCompleted: baseTabReminders.filter((r) => r.done).length,
+      countOverdue: baseTabReminders.filter((r) => isReminderOverdue(r)).length,
     }),
-    [baseTabReminders]
+    [baseTabReminders, isReminderOverdue]
   );
 
   // Filter & Sort reminders
@@ -374,6 +375,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
           if (quickFilter === 'bronze') return r.priority === 'bronze';
           if (quickFilter === 'pending') return !r.done;
           if (quickFilter === 'completed') return r.done;
+          if (quickFilter === 'overdue') return isReminderOverdue(r);
           return true; // 'all'
         })
         .filter((r) => {
@@ -392,7 +394,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
           // 3. Time
           return (a.time || '99:99').localeCompare(b.time || '99:99');
         }),
-    [baseTabReminders, quickFilter, searchQuery]
+    [baseTabReminders, quickFilter, searchQuery, isReminderOverdue]
   );
 
   const handleCreateTask = (e: React.FormEvent) => {
@@ -1118,6 +1120,25 @@ export const TasksView: React.FC<TasksViewProps> = ({
                   <span>تکمیل‌شده</span>
                   <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-current font-black">
                     {toFa(countCompleted)}
+                  </span>
+                </button>
+
+                {/* Overdue */}
+                <button
+                  type="button"
+                  onClick={() => setQuickFilter('overdue')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[38px] ${
+                    quickFilter === 'overdue'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : isDark
+                      ? 'bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20'
+                      : 'bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shadow-xs" />
+                  <span>عقب‌افتاده</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-current font-black">
+                    {toFa(countOverdue)}
                   </span>
                 </button>
               </div>

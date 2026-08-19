@@ -8,7 +8,6 @@ import {
   Sparkles,
   ListTodo,
   Star,
-  Plus,
   Clock,
   CheckCircle2,
   Circle,
@@ -28,7 +27,6 @@ import {
   addDaysToShahDate,
   getWeekDaysForShahDate,
   isSameShahDate,
-  toShahDateKey,
 } from '../utils/calendar';
 import { getOccasionsForDate } from '../data/occasions';
 import { OccasionCard } from './OccasionCard';
@@ -41,7 +39,6 @@ interface CalendarViewProps {
   reminders: Reminder[];
   onSelectDate: (date: ShahDate) => void;
   onChangeMonth: (year: number, month: number) => void;
-  onAddReminder?: (reminder: Omit<Reminder, 'id' | 'createdAt'>) => void;
   onToggleReminder?: (id: string) => void;
 }
 
@@ -180,7 +177,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   reminders,
   onSelectDate,
   onChangeMonth,
-  onAddReminder,
   onToggleReminder,
 }) => {
   const isDark = theme === 'dark';
@@ -188,10 +184,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   // Direction of month/week slide animation (1 for next, -1 for prev)
   const [slideDirection, setSlideDirection] = useState<number>(0);
-
-  // Quick task input for selected day
-  const [quickTitle, setQuickTitle] = useState('');
-  const [quickTime, setQuickTime] = useState('');
 
   // View Mode: 'month' | 'week'
   const [viewMode, setViewMode] = useState<CalendarViewMode>(() => {
@@ -375,27 +367,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const selectedDayWeekdayIndex = weekdayOfShahDate(selectedDate.jy, selectedDate.jm, selectedDate.jd);
   const selectedDayWeekdayName = WEEKDAYS_FA[selectedDayWeekdayIndex];
   const selectedDayGreg = toGregorian(selectedDate.jy, selectedDate.jm, selectedDate.jd);
-
-  const handleAddQuickTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickTitle.trim() || !onAddReminder) return;
-
-    onAddReminder({
-      title: quickTitle.trim(),
-      time: quickTime.trim() || undefined,
-      important: false,
-      recur: 'none',
-      done: false,
-      dateType: 'daily',
-      dateKey: toShahDateKey(selectedDate),
-      jy: selectedDate.jy,
-      jm: selectedDate.jm,
-      jd: selectedDate.jd,
-    });
-
-    setQuickTitle('');
-    setQuickTime('');
-  };
 
   // Motion animation variants for month slide
   const slideVariants = {
@@ -1030,51 +1001,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
         )}
 
-        {/* Quick Add Form for Selected Date */}
-        {onAddReminder && (
-          <form onSubmit={handleAddQuickTask} className="flex flex-col sm:flex-row gap-2 mb-4">
-            <input
-              type="text"
-              value={quickTitle}
-              onChange={(e) => setQuickTitle(e.target.value)}
-              placeholder={`افزودن یادآور به ${selectedDayWeekdayName} (${toFa(selectedDate.jd)} ${MONTH_NAMES_FA[selectedDate.jm - 1]})...`}
-              className={`flex-1 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 border outline-none transition ${
-                isDark
-                  ? 'bg-black/30 text-stone-100 border-white/10 placeholder-stone-500 focus:border-[#f27d26]'
-                  : isTurquoise
-                  ? 'bg-sky-50/50 text-slate-900 border-sky-200 placeholder-slate-400 focus:border-sky-500'
-                  : 'bg-stone-50 text-stone-900 border-stone-200 placeholder-stone-400 focus:border-[#f27d26]'
-              }`}
-            />
-            <div className="flex items-center gap-2">
-              <input
-                type="time"
-                value={quickTime}
-                onChange={(e) => setQuickTime(e.target.value)}
-                className={`text-xs rounded-xl px-2.5 py-2.5 border outline-none ${
-                  isDark
-                    ? 'bg-black/30 text-stone-200 border-white/10'
-                    : isTurquoise
-                    ? 'bg-sky-50/50 text-slate-800 border-sky-200'
-                    : 'bg-stone-50 text-stone-900 border-stone-200'
-                }`}
-              />
-              <button
-                type="submit"
-                disabled={!quickTitle.trim()}
-                className={`flex items-center justify-center gap-1.5 px-4 py-2.5 font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-md shrink-0 ${
-                  isTurquoise
-                    ? 'bg-sky-500 hover:bg-sky-600 text-white shadow-sky-500/20'
-                    : 'bg-[#f27d26] hover:bg-[#ff8a38] text-stone-950 shadow-[#f27d26]/20'
-                }`}
-              >
-                <Plus className="w-4 h-4" />
-                <span>افزودن</span>
-              </button>
-            </div>
-          </form>
-        )}
-
         {/* Day Tasks List */}
         <div className="space-y-2">
           {selectedDayTasks.length > 0 ? (
@@ -1137,7 +1063,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             ))
           ) : (
             <p className={`text-xs text-center py-2 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
-              یادآوری برای این روز مشخص ثبت نشده است. می‌توانید با کادر بالا فوراً ثبت کنید.
+              یادآوری برای این روز مشخص ثبت نشده است. برای افزودن یادآور به بخش «یادآورها» بروید.
             </p>
           )}
         </div>
