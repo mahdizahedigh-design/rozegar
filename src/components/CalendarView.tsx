@@ -1042,8 +1042,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               }`}
             >
               <div
-                className={`flex items-center justify-between pb-3 border-b sticky top-0 bg-inherit z-10 ${
-                  isDark ? 'border-white/10' : isTurquoise ? 'border-sky-100' : 'border-stone-200'
+                className={`flex items-center justify-between pb-3 border-b sticky top-0 z-10 ${
+                  isDark
+                    ? 'bg-[#141418] border-white/10'
+                    : isTurquoise
+                    ? 'bg-white border-sky-100'
+                    : 'bg-white border-stone-200'
                 }`}
               >
                 <div>

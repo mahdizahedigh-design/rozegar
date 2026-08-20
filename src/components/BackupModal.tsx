@@ -119,8 +119,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between pb-3 border-b sticky top-0 bg-inherit z-10 ${
-                isDark ? 'border-white/10' : isTurquoise ? 'border-sky-100' : 'border-stone-200'
+              className={`flex items-center justify-between pb-3 border-b sticky top-0 z-10 ${
+                isDark
+                  ? 'bg-[#141416] border-white/10'
+                  : isTurquoise
+                  ? 'bg-white border-sky-100'
+                  : 'bg-white border-stone-200'
               }`}
             >
               <div className={`flex items-center gap-2 font-bold text-base ${isTurquoise ? 'text-sky-600' : 'text-[#f27d26]'}`}>
