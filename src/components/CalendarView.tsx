@@ -13,6 +13,7 @@ import {
   Circle,
   Folder as FolderIcon,
   RotateCw,
+  X,
 } from 'lucide-react';
 import { ShahDate, Reminder, ThemeMode, CalendarViewMode, Occasion } from '../types';
 import {
@@ -184,6 +185,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   // Direction of month/week slide animation (1 for next, -1 for prev)
   const [slideDirection, setSlideDirection] = useState<number>(0);
+
+  // Popup showing the selected day's reminders (opened via the day badge/button)
+  const [isDayRemindersPopupOpen, setIsDayRemindersPopupOpen] = useState(false);
 
   // View Mode: 'month' | 'week'
   const [viewMode, setViewMode] = useState<CalendarViewMode>(() => {
@@ -363,6 +367,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     () => (showOccasions ? getOccasionsForDate(selectedDate.jm, selectedDate.jd) : []),
     [selectedDate.jm, selectedDate.jd, showOccasions]
   );
+
+  // Close the reminders popup whenever the selected day changes
+  useEffect(() => {
+    setIsDayRemindersPopupOpen(false);
+  }, [selectedDate.jy, selectedDate.jm, selectedDate.jd]);
 
   const selectedDayWeekdayIndex = weekdayOfShahDate(selectedDate.jy, selectedDate.jm, selectedDate.jd);
   const selectedDayWeekdayName = WEEKDAYS_FA[selectedDayWeekdayIndex];
@@ -962,10 +971,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
           </div>
 
-          <span
-            className={`text-xs font-bold px-3 py-1 rounded-xl border ${
+          <button
+            type="button"
+            onClick={() => selectedDayTasks.length > 0 && setIsDayRemindersPopupOpen(true)}
+            disabled={selectedDayTasks.length === 0}
+            className={`text-xs font-bold px-3 py-1 rounded-xl border transition cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
               selectedDayTasks.length > 0
-                ? 'bg-sky-500/15 border-sky-500/30 text-sky-500'
+                ? isTurquoise
+                  ? 'bg-sky-500/15 border-sky-500/30 text-sky-700 hover:bg-sky-500/25'
+                  : 'bg-sky-500/15 border-sky-500/30 text-sky-500 hover:bg-sky-500/25'
                 : isDark
                 ? 'bg-white/5 border-white/10 text-stone-400'
                 : isTurquoise
@@ -973,13 +987,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 : 'bg-stone-100 border-stone-200 text-stone-600'
             }`}
           >
-            {selectedDayTasks.length > 0 ? `${toFa(selectedDayTasks.length)} یادآور برای این روز` : 'بدون یادآور'}
-          </span>
+            <span>{selectedDayTasks.length > 0 ? `${toFa(selectedDayTasks.length)} یادآور برای این روز` : 'بدون یادآور'}</span>
+            {selectedDayTasks.length > 0 && <ListTodo className="w-3.5 h-3.5" />}
+          </button>
         </div>
 
         {/* Occasions summary for this day if any */}
         {showOccasions && selectedDayOccasions.length > 0 && (
-          <div className="mb-4 space-y-2">
+          <div className="space-y-2">
             {selectedDayOccasions.map((occ, idx) => (
               <div
                 key={idx}
@@ -1000,74 +1015,129 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             ))}
           </div>
         )}
+      </motion.div>
 
-        {/* Day Tasks List */}
-        <div className="space-y-2">
-          {selectedDayTasks.length > 0 ? (
-            selectedDayTasks.map((t) => (
+      {/* Reminders Popup for the Selected Day */}
+      <AnimatePresence>
+        {isDayRemindersPopupOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDayRemindersPopupOpen(false)}
+              className="fixed inset-0 bg-black/75 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className={`relative z-10 w-full max-w-md max-h-[80vh] overflow-y-auto p-5 rounded-3xl border shadow-2xl flex flex-col gap-3 overscroll-contain my-auto ${
+                isDark
+                  ? 'bg-[#141418] border-white/10 text-stone-100'
+                  : isTurquoise
+                  ? 'bg-white text-slate-800 border-sky-200 shadow-sky-950/10'
+                  : 'bg-white border-stone-200 text-stone-900'
+              }`}
+            >
               <div
-                key={t.id}
-                className={`p-3 rounded-2xl border flex items-center justify-between gap-3 transition-all ${
-                  t.done
-                    ? isDark
-                      ? 'bg-white/[0.02] border-white/5 opacity-60'
-                      : 'bg-stone-100/60 border-stone-200 opacity-60'
-                    : isDark
-                    ? 'bg-white/[0.04] border-white/10 hover:border-[#f27d26]/30'
-                    : 'bg-white border-stone-200 hover:border-[#f27d26]/40 shadow-xs'
+                className={`flex items-center justify-between pb-3 border-b sticky top-0 bg-inherit z-10 ${
+                  isDark ? 'border-white/10' : isTurquoise ? 'border-sky-100' : 'border-stone-200'
                 }`}
               >
-                <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                  {onToggleReminder && (
-                    <button
-                      type="button"
-                      onClick={() => onToggleReminder(t.id)}
-                      className="text-stone-400 hover:text-[#f27d26] transition cursor-pointer shrink-0"
-                    >
-                      {t.done ? (
-                        <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 fill-emerald-500/20" />
-                      ) : (
-                        <Circle className="w-4.5 h-4.5" />
-                      )}
-                    </button>
-                  )}
+                <div>
+                  <h3 className={`text-sm font-black ${isDark ? 'text-white' : isTurquoise ? 'text-slate-800' : 'text-stone-900'}`}>
+                    یادآورهای {selectedDayWeekdayName}
+                  </h3>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
+                    {toFa(selectedDate.jd)} {MONTH_NAMES_FA[selectedDate.jm - 1]} {toFa(selectedDate.jy)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDayRemindersPopupOpen(false)}
+                  className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                    isDark
+                      ? 'border-white/10 hover:bg-white/10 text-stone-400 hover:text-white'
+                      : isTurquoise
+                      ? 'border-sky-200 hover:bg-sky-50 text-slate-500 hover:text-slate-900'
+                      : 'border-stone-200 hover:bg-stone-100 text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
-                  <span
-                    className={`text-xs sm:text-sm font-semibold truncate ${
-                      t.done ? 'line-through text-stone-500' : isDark ? 'text-stone-100' : 'text-stone-900'
+              <div className="space-y-2">
+                {selectedDayTasks.map((t) => (
+                  <div
+                    key={t.id}
+                    className={`p-3 rounded-2xl border flex items-center justify-between gap-3 transition-all ${
+                      t.done
+                        ? isDark
+                          ? 'bg-white/[0.02] border-white/5 opacity-60'
+                          : 'bg-stone-100/60 border-stone-200 opacity-60'
+                        : isDark
+                        ? 'bg-white/[0.04] border-white/10 hover:border-[#f27d26]/30'
+                        : isTurquoise
+                        ? 'bg-sky-50/40 border-sky-100 hover:border-sky-300'
+                        : 'bg-white border-stone-200 hover:border-[#f27d26]/40 shadow-xs'
                     }`}
                   >
-                    {t.title}
-                  </span>
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      {onToggleReminder && (
+                        <button
+                          type="button"
+                          onClick={() => onToggleReminder(t.id)}
+                          className="text-stone-400 hover:text-[#f27d26] transition cursor-pointer shrink-0"
+                        >
+                          {t.done ? (
+                            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 fill-emerald-500/20" />
+                          ) : (
+                            <Circle className="w-4.5 h-4.5" />
+                          )}
+                        </button>
+                      )}
 
-                  {t.important && (
-                    <Star className="w-3 h-3 fill-amber-400 stroke-amber-500 shrink-0" />
-                  )}
-                </div>
+                      <span
+                        className={`text-xs sm:text-sm font-semibold truncate ${
+                          t.done
+                            ? 'line-through text-stone-500'
+                            : isDark
+                            ? 'text-stone-100'
+                            : isTurquoise
+                            ? 'text-slate-800'
+                            : 'text-stone-900'
+                        }`}
+                      >
+                        {t.title}
+                      </span>
 
-                <div className="flex items-center gap-2 shrink-0 text-[11px] opacity-80">
-                  {t.time && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{t.time}</span>
-                    </span>
-                  )}
-                  {t.recur !== 'none' && (
-                    <span className="flex items-center gap-1 text-sky-400">
-                      <RotateCw className="w-2.5 h-2.5" />
-                      <span>{t.recur === 'daily' ? 'روزانه' : 'ماهانه'}</span>
-                    </span>
-                  )}
-                </div>
+                      {t.important && <Star className="w-3 h-3 fill-amber-400 stroke-amber-500 shrink-0" />}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 text-[11px] opacity-80">
+                      {t.time && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{t.time}</span>
+                        </span>
+                      )}
+                      {t.recur !== 'none' && (
+                        <span className="flex items-center gap-1 text-sky-400">
+                          <RotateCw className="w-2.5 h-2.5" />
+                          <span>{t.recur === 'daily' ? 'روزانه' : 'ماهانه'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))
-          ) : (
-            <p className={`text-xs text-center py-2 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
-              یادآوری برای این روز مشخص ثبت نشده است. برای افزودن یادآور به بخش «یادآورها» بروید.
-            </p>
-          )}
-        </div>
-      </motion.div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Dedicated Occasion Box under the Calendar */}
       {showOccasions && (
