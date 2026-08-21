@@ -63,3 +63,19 @@ export interface AppSettings {
   showGregorian: boolean;
 }
 
+export interface Countdown {
+  id: string;
+  title: string;
+  jy: number;
+  jm: number;
+  jd: number;
+  createdAt: string;
+}
+
+export interface UserProfile {
+  name: string;
+  birthJy: number;
+  birthJm: number;
+  birthJd: number;
+}
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MainTabType, Reminder, ShahDate, ThemeMode } from './types';
+import { MainTabType, Reminder, ShahDate, ThemeMode, Countdown, UserProfile } from './types';
 import { getTodayShahanshahi } from './utils/calendar';
 import { getOccasionsForDate } from './data/occasions';
 import { Header } from './components/Header';
@@ -9,6 +9,8 @@ import { TasksView } from './components/TasksView';
 import { DateConverterModal } from './components/DateConverterModal';
 import { BackupModal } from './components/BackupModal';
 import { SettingsModal } from './components/SettingsModal';
+import { CountdownModal } from './components/CountdownModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import { PersepolisBg } from './components/PersepolisBg';
 import { playTaskCompleteSound, playTaskUncheckSound } from './utils/sound';
 
@@ -16,6 +18,8 @@ const STORAGE_REMINDERS_KEY = 'sc_reminders_v2';
 const STORAGE_FOLDERS_KEY = 'sc_folders_v2';
 const STORAGE_SETTINGS_KEY = 'sc_settings_v2';
 const STORAGE_THEME_KEY = 'sc_theme_mode';
+const STORAGE_COUNTDOWNS_KEY = 'sc_countdowns_v1';
+const STORAGE_PROFILE_KEY = 'sc_profile_v1';
 
 const DEFAULT_FOLDERS = ['کار', 'شخصی', 'مطالعه', 'خرید'];
 
@@ -104,6 +108,37 @@ export default function App() {
   const [isConverterOpen, setIsConverterOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCountdownOpen, setIsCountdownOpen] = useState(false);
+
+  // Countdowns State
+  const [countdowns, setCountdowns] = useState<Countdown[]>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_COUNTDOWNS_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.error(e);
+    }
+    return [];
+  });
+
+  // User Profile State (name + Shahanshahi birth date, collected on first launch)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_PROFILE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  });
+
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(STORAGE_PROFILE_KEY) !== null || localStorage.getItem('sc_onboarding_skipped') === '1';
+    } catch (e) {
+      return false;
+    }
+  });
 
   // Save to LocalStorage
   useEffect(() => {
@@ -129,6 +164,48 @@ export default function App() {
       console.error(e);
     }
   }, [notifEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_COUNTDOWNS_KEY, JSON.stringify(countdowns));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [countdowns]);
+
+  // Handlers for Countdowns
+  const handleAddCountdown = (data: Omit<Countdown, 'id' | 'createdAt'>) => {
+    const newCountdown: Countdown = {
+      ...data,
+      id: 'cd_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      createdAt: new Date().toISOString(),
+    };
+    setCountdowns((prev) => [newCountdown, ...prev]);
+  };
+
+  const handleDeleteCountdown = (id: string) => {
+    setCountdowns((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  // Onboarding handlers
+  const handleCompleteOnboarding = (profile: UserProfile) => {
+    setUserProfile(profile);
+    setHasSeenOnboarding(true);
+    try {
+      localStorage.setItem(STORAGE_PROFILE_KEY, JSON.stringify(profile));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSkipOnboarding = () => {
+    setHasSeenOnboarding(true);
+    try {
+      localStorage.setItem('sc_onboarding_skipped', '1');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Handlers for Reminders
   const handleAddReminder = (data: Omit<Reminder, 'id' | 'createdAt'>) => {
@@ -225,6 +302,7 @@ export default function App() {
         <Header
           today={today}
           theme={theme}
+          userName={userProfile?.name}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onJumpToday={handleJumpToday}
         />
@@ -294,6 +372,7 @@ export default function App() {
         onSelectTheme={setTheme}
         onOpenConverter={() => setIsConverterOpen(true)}
         onOpenBackup={() => setIsBackupOpen(true)}
+        onOpenCountdown={() => setIsCountdownOpen(true)}
       />
 
       <DateConverterModal
@@ -312,6 +391,23 @@ export default function App() {
         onImportData={handleImportData}
         notifEnabled={notifEnabled}
         onToggleNotif={setNotifEnabled}
+      />
+
+      <CountdownModal
+        isOpen={isCountdownOpen}
+        theme={theme}
+        onClose={() => setIsCountdownOpen(false)}
+        countdowns={countdowns}
+        onAddCountdown={handleAddCountdown}
+        onDeleteCountdown={handleDeleteCountdown}
+        userProfile={userProfile}
+      />
+
+      <OnboardingModal
+        isOpen={!hasSeenOnboarding}
+        theme={theme}
+        onComplete={handleCompleteOnboarding}
+        onSkip={handleSkipOnboarding}
       />
     </div>
   );
