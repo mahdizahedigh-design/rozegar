@@ -25,8 +25,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, theme 
   const [m, setM] = useState(today.jm);
   const [y, setY] = useState(today.jy - 20);
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -35,6 +33,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, theme 
 
   return (
     <AnimatePresence>
+      {isOpen && (
       <div className="fixed inset-0 z-[60] overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center">
         <motion.div
           initial={{ opacity: 0 }}
@@ -65,7 +64,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, theme 
               >
                 <Sparkles className="w-7 h-7" />
               </div>
-              <h2 className="text-lg font-black">به تقویم شاهنشاهی خوش اومدی!</h2>
+              <h2 className="text-lg font-black">به روزگار خوش اومدی!</h2>
               <p className={`text-xs ${isDark ? 'text-stone-400' : isTurquoise ? 'text-slate-500' : 'text-stone-500'}`}>
                 برای شخصی‌سازی تجربه‌ت، اسم و تاریخ تولدت رو (به شاهنشاهی) وارد کن.
               </p>
@@ -81,7 +80,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, theme 
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="مثلاً: مهدی"
+                  placeholder="مثلاً: کوروش"
                   autoFocus
                   className={`w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none transition ${
                     isDark
@@ -172,6 +171,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, theme 
           </div>
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

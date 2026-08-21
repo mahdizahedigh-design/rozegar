@@ -49,8 +49,6 @@ export const CountdownModal: React.FC<CountdownModalProps> = ({
   const [m, setM] = useState(today.jm);
   const [y, setY] = useState(today.jy);
 
-  if (!isOpen) return null;
-
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -74,6 +72,7 @@ export const CountdownModal: React.FC<CountdownModalProps> = ({
 
   return (
     <AnimatePresence>
+      {isOpen && (
       <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center">
         <motion.div
           initial={{ opacity: 0 }}
@@ -275,6 +274,7 @@ export const CountdownModal: React.FC<CountdownModalProps> = ({
           </div>
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

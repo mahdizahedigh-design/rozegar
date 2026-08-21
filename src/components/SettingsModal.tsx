@@ -34,8 +34,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenBackup,
   onOpenCountdown,
 }) => {
-  if (!isOpen) return null;
-
   const isDark = theme === 'dark';
   const isTurquoise = theme === 'turquoise';
 
@@ -79,6 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <AnimatePresence>
+      {isOpen && (
       <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center">
         {/* Backdrop */}
         <motion.div
@@ -364,7 +363,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div className="flex items-center gap-1 font-bold">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span>نسخه ۲.۷ (سال ۲۵۸۵)</span>
+              <span>نسخه ۲.۷.۱ (سال ۲۵۸۵)</span>
             </div>
           </div>
 
@@ -381,6 +380,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

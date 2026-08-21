@@ -60,8 +60,6 @@ export const TaskDatePickerModal: React.FC<TaskDatePickerModalProps> = ({
     }
   }, [isOpen, initialDate]);
 
-  if (!isOpen) return null;
-
   // Selected date info
   const targetDate: ShahDate = {
     jy: viewYear,
@@ -106,6 +104,7 @@ export const TaskDatePickerModal: React.FC<TaskDatePickerModalProps> = ({
 
   return (
     <AnimatePresence>
+      {isOpen && (
       <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center">
         {/* Backdrop */}
         <motion.div
@@ -438,6 +437,7 @@ export const TaskDatePickerModal: React.FC<TaskDatePickerModalProps> = ({
           </div>
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 };
