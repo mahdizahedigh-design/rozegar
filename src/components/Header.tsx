@@ -7,6 +7,7 @@ import { MONTH_NAMES_FA, toFa, WEEKDAYS_FA, weekdayOfShahDate } from '../utils/c
 interface HeaderProps {
   today: ShahDate;
   theme: ThemeMode;
+  userName?: string;
   onOpenSettings: () => void;
   onJumpToday: () => void;
 }
@@ -14,6 +15,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   today,
   theme,
+  userName,
   onOpenSettings,
   onJumpToday,
 }) => {
@@ -62,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
               isDark ? 'text-stone-400' : isTurquoise ? 'text-sky-900/70' : 'text-stone-600'
             }`}
           >
-            امروز: {weekdayName}، {toFa(today.jd)} {MONTH_NAMES_FA[today.jm - 1]} {toFa(today.jy)}
+            {userName ? `سلام ${userName}! ` : ''}امروز: {weekdayName}، {toFa(today.jd)} {MONTH_NAMES_FA[today.jm - 1]} {toFa(today.jy)}
           </p>
         </div>
       </div>

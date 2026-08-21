@@ -11,6 +11,7 @@ import {
   Volume2,
   Calendar,
   ShieldCheck,
+  Timer,
 } from 'lucide-react';
 import { ThemeMode } from '../types';
 
@@ -21,6 +22,7 @@ interface SettingsModalProps {
   onSelectTheme: (theme: ThemeMode) => void;
   onOpenConverter: () => void;
   onOpenBackup: () => void;
+  onOpenCountdown: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -30,6 +32,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectTheme,
   onOpenConverter,
   onOpenBackup,
+  onOpenCountdown,
 }) => {
   if (!isOpen) return null;
 
@@ -93,7 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative z-10 w-full max-w-xl max-h-[88vh] overflow-y-auto p-5 sm:p-6 rounded-3xl border shadow-2xl flex flex-col gap-5 overscroll-contain my-auto ${
+          className={`relative z-10 w-full max-w-xl max-h-[88vh] rounded-3xl border shadow-2xl my-auto overflow-hidden ${
             isDark
               ? 'bg-[#121217] border-white/10 text-stone-100'
               : isTurquoise
@@ -101,6 +104,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               : 'bg-white border-stone-200 text-stone-900'
           }`}
         >
+          {/* Scrollable inner wrapper — kept transform-free so sticky headers work on mobile */}
+          <div className="h-full max-h-[88vh] overflow-y-auto overscroll-contain p-5 sm:p-6 flex flex-col gap-5">
           {/* Header */}
           <div
             className={`flex items-center justify-between pb-3.5 border-b sticky top-0 z-20 ${
@@ -307,6 +312,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </p>
                 </div>
               </motion.button>
+
+              {/* Countdown Card */}
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  onClose();
+                  onOpenCountdown();
+                }}
+                className={`p-3.5 rounded-2xl border text-right transition cursor-pointer flex items-center gap-3 ${
+                  isDark
+                    ? 'bg-white/[0.03] hover:bg-white/[0.07] border-white/10 hover:border-[#f27d26]/40'
+                    : isTurquoise
+                    ? 'bg-sky-50/50 hover:bg-sky-50 border-sky-100 hover:border-sky-300'
+                    : 'bg-stone-50 hover:bg-orange-50/60 border-stone-200 hover:border-[#f27d26]/40'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-500 flex items-center justify-center shrink-0">
+                  <Timer className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm">شمارش معکوس</h4>
+                  <p
+                    className={`text-[11px] mt-0.5 ${
+                      isDark ? 'text-stone-400' : 'text-stone-600'
+                    }`}
+                  >
+                    روزشمار برای یک تاریخ خاص
+                  </p>
+                </div>
+              </motion.button>
             </div>
           </div>
 
@@ -327,7 +364,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div className="flex items-center gap-1 font-bold">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span>نسخه ۲.۶.۱ (سال ۲۵۸۵)</span>
+              <span>نسخه ۲.۸ (سال ۲۵۸۵)</span>
             </div>
           </div>
 
@@ -340,6 +377,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               بستن پنجره تنظیمات
             </button>
+          </div>
           </div>
         </motion.div>
       </div>

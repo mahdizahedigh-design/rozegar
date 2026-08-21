@@ -1033,7 +1033,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 15 }}
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className={`relative z-10 w-full max-w-md max-h-[80vh] overflow-y-auto p-5 rounded-3xl border shadow-2xl flex flex-col gap-3 overscroll-contain my-auto ${
+              className={`relative z-10 w-full max-w-md max-h-[80vh] rounded-3xl border shadow-2xl my-auto overflow-hidden ${
                 isDark
                   ? 'bg-[#141418] border-white/10 text-stone-100'
                   : isTurquoise
@@ -1041,6 +1041,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   : 'bg-white border-stone-200 text-stone-900'
               }`}
             >
+              {/* Scrollable inner wrapper — kept transform-free so sticky headers work on mobile */}
+              <div className="h-full max-h-[80vh] overflow-y-auto overscroll-contain p-5 flex flex-col gap-3">
               <div
                 className={`flex items-center justify-between pb-3 border-b sticky top-0 z-10 ${
                   isDark
@@ -1137,6 +1139,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
               </div>
             </motion.div>
           </div>
