@@ -304,3 +304,25 @@ export function getWeekDaysForShahDate(date: ShahDate): ShahDate[] {
   return days;
 }
 
+// Absolute day-count difference between two Shahanshahi dates (b - a), in days
+export function daysBetweenShahDates(a: ShahDate, b: ShahDate): number {
+  const jdnA = j2d(shahToSolar(a.jy), a.jm, a.jd);
+  const jdnB = j2d(shahToSolar(b.jy), b.jm, b.jd);
+  return jdnB - jdnA;
+}
+
+// Days remaining until a target Shahanshahi date, relative to today
+// (negative if the date is in the past, 0 if it's today)
+export function daysUntilShahDate(target: ShahDate): number {
+  return daysBetweenShahDates(getTodayShahanshahi(), target);
+}
+
+// Given a recurring month/day (e.g. a birthday), returns its next upcoming
+// occurrence — this year if it hasn't passed yet, otherwise next year.
+export function nextOccurrenceOfMonthDay(jm: number, jd: number): ShahDate {
+  const today = getTodayShahanshahi();
+  const thisYear: ShahDate = { jy: today.jy, jm, jd };
+  if (daysUntilShahDate(thisYear) >= 0) return thisYear;
+  return { jy: today.jy + 1, jm, jd };
+}
+
