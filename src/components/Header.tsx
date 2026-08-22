@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Calendar as CalendarIcon, Settings } from 'lucide-react';
 import { ShahDate, ThemeMode } from '../types';
 import { MONTH_NAMES_FA, toFa, WEEKDAYS_FA, weekdayOfShahDate } from '../utils/calendar';
+import { ToolsPopover } from './ToolsPopover';
 
 interface HeaderProps {
   today: ShahDate;
@@ -10,6 +11,9 @@ interface HeaderProps {
   userName?: string;
   onOpenSettings: () => void;
   onJumpToday: () => void;
+  onOpenConverter: () => void;
+  onOpenBackup: () => void;
+  onOpenCountdown: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,28 +22,46 @@ export const Header: React.FC<HeaderProps> = ({
   userName,
   onOpenSettings,
   onJumpToday,
+  onOpenConverter,
+  onOpenBackup,
+  onOpenCountdown,
 }) => {
   const weekdayIndex = weekdayOfShahDate(today.jy, today.jm, today.jd);
   const weekdayName = WEEKDAYS_FA[weekdayIndex];
   const isDark = theme === 'dark';
   const isTurquoise = theme === 'turquoise';
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
 
   return (
     <header className="w-full max-w-4xl mx-auto pt-4 pb-2 px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-colors duration-300">
       {/* Brand & Today Subtitle */}
       <div className="flex items-center gap-3">
-        <motion.div
-          whileHover={{ rotate: 5, scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-          className="w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-[#f27d26]/20 ring-1 ring-white/20 shrink-0 cursor-pointer bg-[#14141a] flex items-center justify-center p-0.5"
-        >
-          <img
-            src="/icon-192.png"
-            alt="تقویم شاهنشاهی"
-            className="w-full h-full object-cover rounded-xl"
-            referrerPolicy="no-referrer"
+        <div className="relative shrink-0">
+          <motion.button
+            type="button"
+            whileHover={{ rotate: 5, scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setIsToolsOpen((v) => !v)}
+            title="ابزارهای کاربردی"
+            className="w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-[#f27d26]/20 ring-1 ring-white/20 cursor-pointer bg-[#14141a] flex items-center justify-center p-0.5"
+          >
+            <img
+              src="/icon-192.png"
+              alt="تقویم شاهنشاهی"
+              className="w-full h-full object-cover rounded-xl"
+              referrerPolicy="no-referrer"
+            />
+          </motion.button>
+
+          <ToolsPopover
+            isOpen={isToolsOpen}
+            theme={theme}
+            onClose={() => setIsToolsOpen(false)}
+            onOpenConverter={onOpenConverter}
+            onOpenBackup={onOpenBackup}
+            onOpenCountdown={onOpenCountdown}
           />
-        </motion.div>
+        </div>
         <div>
           <h1
             className={`text-lg font-black tracking-normal flex items-center gap-2 ${
@@ -94,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
           whileHover={{ scale: 1.06, rotate: 25 }}
           whileTap={{ scale: 0.92 }}
           onClick={onOpenSettings}
-          title="تنظیمات، تم‌ها، مبدل تاریخ و پشتیبان‌گیری"
+          title="تنظیمات و تم‌ها"
           className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
             isDark
               ? 'bg-[#181822]/80 backdrop-blur-md hover:bg-[#252532] text-stone-200 hover:text-[#f27d26] border-white/15 hover:border-[#f27d26]/50 shadow-xs'

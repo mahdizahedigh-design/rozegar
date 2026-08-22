@@ -4,14 +4,9 @@ import {
   X,
   Settings,
   Palette,
-  ArrowLeftRight,
-  Download,
   Check,
-  Sparkles,
   Volume2,
-  Calendar,
   ShieldCheck,
-  Timer,
 } from 'lucide-react';
 import { ThemeMode } from '../types';
 import { APP_VERSION, APP_YEAR_SHAHANSHAHI } from '../data/changelog';
@@ -22,9 +17,6 @@ interface SettingsModalProps {
   onClose: () => void;
   theme: ThemeMode;
   onSelectTheme: (theme: ThemeMode) => void;
-  onOpenConverter: () => void;
-  onOpenBackup: () => void;
-  onOpenCountdown: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -32,9 +24,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   theme,
   onSelectTheme,
-  onOpenConverter,
-  onOpenBackup,
-  onOpenCountdown,
 }) => {
   const isDark = theme === 'dark';
   const isTurquoise = theme === 'turquoise';
@@ -145,7 +134,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     isDark ? 'text-stone-400' : isTurquoise ? 'text-sky-800/70' : 'text-stone-500'
                   }`}
                 >
-                  مدیریت تم ظاهری، ابزارهای تقویم و پشتیبان‌گیری
+                  مدیریت تم و پوستهٔ ظاهری برنامه
                 </p>
               </div>
             </div>
@@ -251,113 +240,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Quick Tools & Utilities */}
-          <div className="space-y-3 pt-2">
-            <span className="text-xs sm:text-sm font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4" style={{ color: accent }} />
-              <span>ابزارهای کاربردی</span>
-            </span>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {/* Date Converter Card */}
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  onClose();
-                  onOpenConverter();
-                }}
-                className={`p-3.5 rounded-2xl border text-right transition cursor-pointer flex items-center gap-3 ${
-                  isDark
-                    ? 'bg-white/[0.03] hover:bg-white/[0.07] border-white/10 hover:border-[#f27d26]/40'
-                    : isTurquoise
-                    ? 'bg-sky-50/50 hover:bg-sky-50 border-sky-100 hover:border-sky-300'
-                    : 'bg-stone-50 hover:bg-orange-50/60 border-stone-200 hover:border-[#f27d26]/40'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#f27d26]/15 text-[#f27d26] flex items-center justify-center shrink-0">
-                  <ArrowLeftRight className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm">مبدل تاریخ</h4>
-                  <p
-                    className={`text-[11px] mt-0.5 ${
-                      isDark ? 'text-stone-400' : 'text-stone-600'
-                    }`}
-                  >
-                    تبدیل شاهنشاهی، خورشیدی، میلادی
-                  </p>
-                </div>
-              </motion.button>
-
-              {/* Backup & Restore Card */}
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  onClose();
-                  onOpenBackup();
-                }}
-                className={`p-3.5 rounded-2xl border text-right transition cursor-pointer flex items-center gap-3 ${
-                  isDark
-                    ? 'bg-white/[0.03] hover:bg-white/[0.07] border-white/10 hover:border-[#f27d26]/40'
-                    : isTurquoise
-                    ? 'bg-sky-50/50 hover:bg-sky-50 border-sky-100 hover:border-sky-300'
-                    : 'bg-stone-50 hover:bg-orange-50/60 border-stone-200 hover:border-[#f27d26]/40'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
-                  <Download className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm">پشتیبان‌گیری و بازیابی</h4>
-                  <p
-                    className={`text-[11px] mt-0.5 ${
-                      isDark ? 'text-stone-400' : 'text-stone-600'
-                    }`}
-                  >
-                    خروجی فایل JSON و بازیابی یادآورها
-                  </p>
-                </div>
-              </motion.button>
-
-              {/* Countdown Card */}
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  onClose();
-                  onOpenCountdown();
-                }}
-                className={`p-3.5 rounded-2xl border text-right transition cursor-pointer flex items-center gap-3 ${
-                  isDark
-                    ? 'bg-white/[0.03] hover:bg-white/[0.07] border-white/10 hover:border-[#f27d26]/40'
-                    : isTurquoise
-                    ? 'bg-sky-50/50 hover:bg-sky-50 border-sky-100 hover:border-sky-300'
-                    : 'bg-stone-50 hover:bg-orange-50/60 border-stone-200 hover:border-[#f27d26]/40'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-500 flex items-center justify-center shrink-0">
-                  <Timer className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm">شمارش معکوس</h4>
-                  <p
-                    className={`text-[11px] mt-0.5 ${
-                      isDark ? 'text-stone-400' : 'text-stone-600'
-                    }`}
-                  >
-                    روزشمار برای یک تاریخ خاص
-                  </p>
-                </div>
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Section 3: App Info & Tactile feedback indicator */}
+          {/* Section 2: App Info & Tactile feedback indicator */}
           <div
             className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs ${
               isDark
