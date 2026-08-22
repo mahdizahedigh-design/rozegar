@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { MainTabType, Reminder, ShahDate, ThemeMode, Countdown, UserProfile } from './types';
 import { getTodayShahanshahi } from './utils/calendar';
 import { getOccasionsForDate } from './data/occasions';
@@ -6,13 +6,17 @@ import { Header } from './components/Header';
 import { MainTabs } from './components/MainTabs';
 import { CalendarView } from './components/CalendarView';
 import { TasksView } from './components/TasksView';
-import { DateConverterModal } from './components/DateConverterModal';
-import { BackupModal } from './components/BackupModal';
-import { SettingsModal } from './components/SettingsModal';
-import { CountdownModal } from './components/CountdownModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { PersepolisBg } from './components/PersepolisBg';
 import { playTaskCompleteSound, playTaskUncheckSound } from './utils/sound';
+
+// Lazy-loaded: these modals are only needed after an explicit user action
+// (opening settings/converter/backup/countdown), so keeping them out of the
+// initial bundle speeds up first paint, especially on slow mobile networks.
+const DateConverterModal = lazy(() => import('./components/DateConverterModal').then((m) => ({ default: m.DateConverterModal })));
+const BackupModal = lazy(() => import('./components/BackupModal').then((m) => ({ default: m.BackupModal })));
+const SettingsModal = lazy(() => import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal })));
+const CountdownModal = lazy(() => import('./components/CountdownModal').then((m) => ({ default: m.CountdownModal })));
 
 const STORAGE_REMINDERS_KEY = 'sc_reminders_v2';
 const STORAGE_FOLDERS_KEY = 'sc_folders_v2';
@@ -41,14 +45,6 @@ export default function App() {
     }
     return 'dark';
   });
-
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      if (prev === 'dark') return 'turquoise';
-      if (prev === 'turquoise') return 'light';
-      return 'dark';
-    });
-  };
 
   // Synchronize document theme class
   useEffect(() => {
@@ -365,43 +361,48 @@ export default function App() {
       </footer>
 
       {/* Modals */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        theme={theme}
-        onClose={() => setIsSettingsOpen(false)}
-        onSelectTheme={setTheme}
-        onOpenConverter={() => setIsConverterOpen(true)}
-        onOpenBackup={() => setIsBackupOpen(true)}
-        onOpenCountdown={() => setIsCountdownOpen(true)}
-      />
+      {/* Lazy-loaded modals are wrapped in Suspense; fallback is null since
+          each only renders once its own isOpen prop is true, and the lazy
+          chunk (a few KB) loads near-instantly on the open action. */}
+      <Suspense fallback={null}>
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          theme={theme}
+          onClose={() => setIsSettingsOpen(false)}
+          onSelectTheme={setTheme}
+          onOpenConverter={() => setIsConverterOpen(true)}
+          onOpenBackup={() => setIsBackupOpen(true)}
+          onOpenCountdown={() => setIsCountdownOpen(true)}
+        />
 
-      <DateConverterModal
-        isOpen={isConverterOpen}
-        theme={theme}
-        onClose={() => setIsConverterOpen(false)}
-        initialShahDate={selectedDate}
-      />
+        <DateConverterModal
+          isOpen={isConverterOpen}
+          theme={theme}
+          onClose={() => setIsConverterOpen(false)}
+          initialShahDate={selectedDate}
+        />
 
-      <BackupModal
-        isOpen={isBackupOpen}
-        theme={theme}
-        onClose={() => setIsBackupOpen(false)}
-        reminders={reminders}
-        folders={folders}
-        onImportData={handleImportData}
-        notifEnabled={notifEnabled}
-        onToggleNotif={setNotifEnabled}
-      />
+        <BackupModal
+          isOpen={isBackupOpen}
+          theme={theme}
+          onClose={() => setIsBackupOpen(false)}
+          reminders={reminders}
+          folders={folders}
+          onImportData={handleImportData}
+          notifEnabled={notifEnabled}
+          onToggleNotif={setNotifEnabled}
+        />
 
-      <CountdownModal
-        isOpen={isCountdownOpen}
-        theme={theme}
-        onClose={() => setIsCountdownOpen(false)}
-        countdowns={countdowns}
-        onAddCountdown={handleAddCountdown}
-        onDeleteCountdown={handleDeleteCountdown}
-        userProfile={userProfile}
-      />
+        <CountdownModal
+          isOpen={isCountdownOpen}
+          theme={theme}
+          onClose={() => setIsCountdownOpen(false)}
+          countdowns={countdowns}
+          onAddCountdown={handleAddCountdown}
+          onDeleteCountdown={handleDeleteCountdown}
+          userProfile={userProfile}
+        />
+      </Suspense>
 
       <OnboardingModal
         isOpen={!hasSeenOnboarding}
