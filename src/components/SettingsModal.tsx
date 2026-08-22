@@ -363,7 +363,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div className="flex items-center gap-1 font-bold">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span>نسخه ۲.۷.۱ (سال ۲۵۸۵)</span>
+              <span>نسخه ۲.۷.۲ (سال ۲۵۸۵)</span>
             </div>
           </div>
 

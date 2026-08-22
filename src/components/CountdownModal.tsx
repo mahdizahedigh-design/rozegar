@@ -255,7 +255,12 @@ export const CountdownModal: React.FC<CountdownModalProps> = ({
                 <input
                   type="number"
                   value={y}
-                  onChange={(e) => setY(parseInt(e.target.value, 10) || today.jy)}
+                  onChange={(e) => {
+                    const yy = parseInt(e.target.value, 10) || today.jy;
+                    setY(yy);
+                    const maxD = shahMonthLength(yy, m);
+                    if (d > maxD) setD(maxD);
+                  }}
                   className={`w-full px-2 py-2 rounded-xl border text-xs text-center outline-none ${
                     isDark ? 'bg-black/30 text-stone-100 border-white/10' : isTurquoise ? 'bg-white border-sky-200 text-slate-800' : 'bg-white border-stone-200 text-stone-900'
                   }`}

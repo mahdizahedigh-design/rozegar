@@ -284,6 +284,8 @@ export const TaskDatePickerModal: React.FC<TaskDatePickerModalProps> = ({
                           onClick={() => {
                             setViewYear(y);
                             setIsYearPickerOpen(false);
+                            const maxD = shahMonthLength(y, viewMonth);
+                            if (chosenDay > maxD) setChosenDay(maxD);
                           }}
                           className={`text-xs py-1 px-2 rounded-lg text-right transition cursor-pointer ${
                             viewYear === y
