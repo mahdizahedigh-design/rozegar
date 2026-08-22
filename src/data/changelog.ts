@@ -2,7 +2,7 @@
 // App.tsx compares this version against the last one stored in
 // localStorage on launch, and shows the "به‌روز شدی!" modal with the
 // matching entry below whenever they differ.
-export const APP_VERSION = '2.7.4';
+export const APP_VERSION = '2.7.5';
 export const APP_YEAR_SHAHANSHAHI = '۲۵۸۵';
 
 export interface ChangelogEntry {
@@ -11,6 +11,12 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.7.5',
+    changes: [
+      'تغییر: ابزارهای کاربردی (مبدل تاریخ، پشتیبان‌گیری و بازیابی، شمارش معکوس) از بخش تنظیمات به پاپ‌آپ جدیدی منتقل شدند که با زدن روی لگوی برنامه در بالای صفحه باز می‌شود.',
+    ],
+  },
   {
     version: '2.7.4',
     changes: [
