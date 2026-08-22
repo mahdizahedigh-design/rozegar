@@ -8,7 +8,9 @@ import { CalendarView } from './components/CalendarView';
 import { TasksView } from './components/TasksView';
 import { OnboardingModal } from './components/OnboardingModal';
 import { PersepolisBg } from './components/PersepolisBg';
+import { UpdateModal } from './components/UpdateModal';
 import { playTaskCompleteSound, playTaskUncheckSound } from './utils/sound';
+import { APP_VERSION, CHANGELOG } from './data/changelog';
 
 // Lazy-loaded: these modals are only needed after an explicit user action
 // (opening settings/converter/backup/countdown), so keeping them out of the
@@ -24,6 +26,7 @@ const STORAGE_SETTINGS_KEY = 'sc_settings_v2';
 const STORAGE_THEME_KEY = 'sc_theme_mode';
 const STORAGE_COUNTDOWNS_KEY = 'sc_countdowns_v1';
 const STORAGE_PROFILE_KEY = 'sc_profile_v1';
+const STORAGE_VERSION_KEY = 'sc_last_seen_version';
 
 const DEFAULT_FOLDERS = ['کار', 'شخصی', 'مطالعه', 'خرید'];
 
@@ -135,6 +138,25 @@ export default function App() {
       return false;
     }
   });
+
+  // "What's new" modal: shown once whenever the app version changes since
+  // the user's last visit. Nothing shows on a brand-new install — only on
+  // a genuine update — and it's checked once on mount, after we already
+  // know whether onboarding is needed.
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const lastSeenVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+      if (lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+        setIsUpdateModalOpen(true);
+      }
+      localStorage.setItem(STORAGE_VERSION_KEY, APP_VERSION);
+    } catch (e) {
+      console.error(e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Save to LocalStorage
   useEffect(() => {
@@ -409,6 +431,14 @@ export default function App() {
         theme={theme}
         onComplete={handleCompleteOnboarding}
         onSkip={handleSkipOnboarding}
+      />
+
+      <UpdateModal
+        isOpen={isUpdateModalOpen && hasSeenOnboarding}
+        theme={theme}
+        version={APP_VERSION}
+        entry={CHANGELOG.find((c) => c.version === APP_VERSION)}
+        onClose={() => setIsUpdateModalOpen(false)}
       />
     </div>
   );
