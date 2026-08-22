@@ -323,6 +323,9 @@ export default function App() {
           userName={userProfile?.name}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onJumpToday={handleJumpToday}
+          onOpenConverter={() => setIsConverterOpen(true)}
+          onOpenBackup={() => setIsBackupOpen(true)}
+          onOpenCountdown={() => setIsCountdownOpen(true)}
         />
 
         {/* Main Two Tabs: تقویم | یادآورها و کارها */}
@@ -392,9 +395,6 @@ export default function App() {
           theme={theme}
           onClose={() => setIsSettingsOpen(false)}
           onSelectTheme={setTheme}
-          onOpenConverter={() => setIsConverterOpen(true)}
-          onOpenBackup={() => setIsBackupOpen(true)}
-          onOpenCountdown={() => setIsCountdownOpen(true)}
         />
 
         <DateConverterModal
