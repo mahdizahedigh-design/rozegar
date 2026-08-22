@@ -61,15 +61,27 @@ export const PersepolisBg: React.FC<PersepolisBgProps> = ({ theme }) => {
         }`}
       />
 
-      {/* Optimized Ambient Glow Orbs for smooth 60fps on mobile */}
+      {/* Ambient Glow — rendered as radial-gradients instead of CSS blur().
+          filter:blur() is one of the most GPU-expensive CSS properties and,
+          since these orbs are always mounted, a real drag on low-end mobile
+          GPUs (especially during scroll/compositing). A radial-gradient
+          gives the same soft-glow look with near-zero rendering cost. */}
       <div
-        className={`absolute -top-32 -right-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full blur-[80px] sm:blur-[100px] pointer-events-none opacity-20 transform-gpu will-change-transform ${
-          isDark ? 'bg-[#f27d26]' : isTurquoise ? 'bg-[#00a896]' : 'bg-amber-400'
+        className={`absolute -top-32 -right-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full pointer-events-none opacity-20 ${
+          isDark
+            ? 'bg-[radial-gradient(circle,#f27d26_0%,transparent_70%)]'
+            : isTurquoise
+            ? 'bg-[radial-gradient(circle,#00a896_0%,transparent_70%)]'
+            : 'bg-[radial-gradient(circle,#fbbf24_0%,transparent_70%)]'
         }`}
       />
       <div
-        className={`absolute -bottom-32 -left-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full blur-[80px] sm:blur-[100px] pointer-events-none opacity-15 transform-gpu will-change-transform ${
-          isDark ? 'bg-[#f27d26]' : isTurquoise ? 'bg-[#0284c7]' : 'bg-amber-300'
+        className={`absolute -bottom-32 -left-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full pointer-events-none opacity-15 ${
+          isDark
+            ? 'bg-[radial-gradient(circle,#f27d26_0%,transparent_70%)]'
+            : isTurquoise
+            ? 'bg-[radial-gradient(circle,#0284c7_0%,transparent_70%)]'
+            : 'bg-[radial-gradient(circle,#fcd34d_0%,transparent_70%)]'
         }`}
       />
     </div>
