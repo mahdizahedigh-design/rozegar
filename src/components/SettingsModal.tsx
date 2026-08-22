@@ -14,6 +14,8 @@ import {
   Timer,
 } from 'lucide-react';
 import { ThemeMode } from '../types';
+import { APP_VERSION, APP_YEAR_SHAHANSHAHI } from '../data/changelog';
+import { toFa } from '../utils/calendar';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const isTurquoise = theme === 'turquoise';
+  const accent = isDark ? '#f27d26' : isTurquoise ? '#0284c7' : '#d97706';
 
   const themeOptions: {
     id: ThemeMode;
@@ -95,14 +98,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative z-10 w-full max-w-xl max-h-[88vh] rounded-3xl border shadow-2xl my-auto overflow-hidden ${
-            isDark
-              ? 'bg-[#121217] border-white/10 text-stone-100'
-              : isTurquoise
-              ? 'bg-white border-sky-100 text-slate-800'
-              : 'bg-white border-stone-200 text-stone-900'
-          }`}
+          className="relative z-10 w-full max-w-xl max-h-[88vh] my-auto"
         >
+          {/* Clipping wrapper kept separate from the transformed/animated element above —
+              combining `transform` (from framer-motion) with `overflow-hidden` and a
+              `position: sticky` descendant on the SAME element makes some browsers fail
+              to clip the sticky child to the rounded corners, letting the backdrop show
+              through above the header. Splitting them into two nested elements fixes it. */}
+          <div
+            className={`h-full max-h-[88vh] rounded-3xl border shadow-2xl overflow-hidden ${
+              isDark
+                ? 'bg-[#121217] border-white/10 text-stone-100'
+                : isTurquoise
+                ? 'bg-white border-sky-100 text-slate-800'
+                : 'bg-white border-stone-200 text-stone-900'
+            }`}
+          >
           {/* Scrollable inner wrapper — kept transform-free so sticky headers work on mobile */}
           <div className="h-full max-h-[88vh] overflow-y-auto overscroll-contain p-5 sm:p-6 flex flex-col gap-5">
           {/* Header */}
@@ -155,7 +166,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Section 1: Themes */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Palette className="w-4 h-4 text-[#f27d26]" />
+              <Palette className="w-4 h-4" style={{ color: accent }} />
               <span className="text-xs sm:text-sm font-bold">انتخاب تم و پوسته ظاهری</span>
             </div>
 
@@ -243,7 +254,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Section 2: Quick Tools & Utilities */}
           <div className="space-y-3 pt-2">
             <span className="text-xs sm:text-sm font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#f27d26]" />
+              <Sparkles className="w-4 h-4" style={{ color: accent }} />
               <span>ابزارهای کاربردی</span>
             </span>
 
@@ -363,7 +374,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div className="flex items-center gap-1 font-bold">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span>نسخه ۲.۷.۳ (سال ۲۵۸۵)</span>
+              <span>نسخه {toFa(APP_VERSION)} (سال {APP_YEAR_SHAHANSHAHI})</span>
             </div>
           </div>
 
@@ -372,10 +383,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 bg-[#f27d26] text-stone-950 text-xs font-black rounded-xl hover:bg-[#ff8a38] transition cursor-pointer shadow-lg shadow-[#f27d26]/20 active:scale-95"
+              style={{ backgroundColor: accent, boxShadow: `0 10px 25px -5px ${accent}33` }}
+              className="px-6 py-2.5 text-stone-950 text-xs font-black rounded-xl transition cursor-pointer active:scale-95 hover:brightness-110"
             >
               بستن پنجره تنظیمات
             </button>
+          </div>
           </div>
           </div>
         </motion.div>
